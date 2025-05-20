@@ -411,3 +411,73 @@ canvas {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Window Controls 樣式 */
+.window-controls {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 100;
+}
+
+.window-button {
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.window-button:hover {
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+.window-panel {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 4px;
+  padding: 15px;
+  margin-top: 5px;
+  width: 250px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.window-sliders {
+  margin-bottom: 10px;
+}
+
+.slider-group {
+  margin-bottom: 8px;
+}
+
+.slider-group label {
+  display: block;
+  color: white;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.slider-group input[type="range"] {
+  width: 100%;
+}
+
+.window-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.window-presets button {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.window-presets button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}

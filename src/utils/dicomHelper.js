@@ -1,4 +1,4 @@
-// src/utils/dicomHelper.js - 優化 DICOM 解析功能
+// src/utils/dicomHelper.js - 修正明暗度問題
 
 import * as dicomParser from 'dicom-parser';
 
@@ -36,15 +36,23 @@ export const parseDicomFile = (arrayBuffer) => {
     const pixelRepresentation = dataSet.uint16('x00280103') || 0;
     const samplesPerPixel = dataSet.uint16('x00280002') || 1;
     const planarConfiguration = dataSet.uint16('x00280006') || 0;
+    
+    // 獲取光度解釋參數 (這對於正確顯示黑白很重要)
+    // MONOCHROME1: 黑白反轉，高密度區域顯示為黑色
+    // MONOCHROME2: 標準顯示，高密度區域顯示為白色
     const photometricInterpretation = dataSet.string('x00280004') || 'MONOCHROME2';
     
     // 獲取窗口寬度和中心值 (如果有的話)
-    let windowCenter = dataSet.floatString('x00281050', 0) || 127;
-    let windowWidth = dataSet.floatString('x00281051', 0) || 256;
+    let windowCenter = dataSet.floatString('x00281050', 0);
+    let windowWidth = dataSet.floatString('x00281051', 0);
     
     // 如果窗口值是陣列，取第一個值
     if (Array.isArray(windowCenter)) windowCenter = windowCenter[0];
     if (Array.isArray(windowWidth)) windowWidth = windowWidth[0];
+    
+    // 如果沒有窗口值，設置默認值
+    if (!windowCenter) windowCenter = 127;
+    if (!windowWidth) windowWidth = 256;
     
     // 檢查 transfer syntax UID，以確定是否是壓縮的 DICOM
     const transferSyntaxUID = dataSet.string('x00020010') || '1.2.840.10008.1.2'; // 默認為隱式 VR 小端
@@ -57,7 +65,6 @@ export const parseDicomFile = (arrayBuffer) => {
       highBit,
       pixelRepresentation,
       samplesPerPixel,
-      planarConfiguration,
       photometricInterpretation,
       windowCenter,
       windowWidth,
@@ -99,9 +106,9 @@ export const createDicomImage = async (dicomData) => {
     columns,
     bitsAllocated,
     pixelRepresentation,
+    photometricInterpretation,
     windowCenter,
-    windowWidth,
-    photometricInterpretation
+    windowWidth
   } = dicomData;
   
   // 創建離屏Canvas用於處理圖像
@@ -150,8 +157,12 @@ export const createDicomImage = async (dicomData) => {
   
   console.log("Pixel range:", { min, max, windowCenter, windowWidth });
   
-  // 確定需要應用的變換 (基於光度解釋)
-  const invert = photometricInterpretation === 'MONOCHROME1';
+  // 確定是否需要反轉，基於光度解釋
+  // MONOCHROME1: 黑白反轉，高密度區域顯示為黑色
+  // MONOCHROME2: 標準顯示，高密度區域顯示為白色
+  const shouldInvert = photometricInterpretation === 'MONOCHROME1';
+  
+  console.log("Photometric Interpretation:", photometricInterpretation, "Should Invert:", shouldInvert);
   
   // 轉換成ImageData格式
   let pixelIndex = 0;
@@ -174,7 +185,7 @@ export const createDicomImage = async (dicomData) => {
       adjustedValue = Math.max(0, Math.min(255, adjustedValue));
       
       // 如果是 MONOCHROME1，則反轉亮度
-      if (invert) {
+      if (shouldInvert) {
         adjustedValue = 255 - adjustedValue;
       }
       

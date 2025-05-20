@@ -1,4 +1,4 @@
-// src/DicomViewer.jsx (完整優化版)
+// src/DicomViewer.jsx (修正明暗對比度版本)
 import React, { useState } from 'react';
 import Header from './components/Header';
 import DicomUploader from './components/DicomUploader';
@@ -13,6 +13,7 @@ const DicomViewer = () => {
   // 狀態管理
   const [dicomFile, setDicomFile] = useState(null);
   const [dicomImage, setDicomImage] = useState(null);
+  const [dicomData, setDicomData] = useState(null);
   const [patientInfo, setPatientInfo] = useState({
     patientName: 'xxxx',
     birthdate: 'xx',
@@ -25,17 +26,24 @@ const DicomViewer = () => {
   const [editingLabelIndex, setEditingLabelIndex] = useState(-1);
   
   // 處理檔案上傳完成
-  const handleDicomLoaded = (file, imageObj, patientData) => {
+  const handleDicomLoaded = (file, imageObj, patientData, originalDicomData) => {
     console.log("DICOM loaded:", file.name, "Image size:", imageObj.width, "x", imageObj.height);
     setDicomFile(file);
     setDicomImage(imageObj);
     setPatientInfo(patientData);
+    setDicomData(originalDicomData);
     
     // 清除現有標記
     setLabels([]);
     setCurrentPolygon([]);
     setIsDrawing(false);
     setEditingLabelIndex(-1);
+  };
+  
+  // 處理影像更新（如窗寬/窗位變化後）
+  const handleImageUpdate = (newImage, newDicomData) => {
+    setDicomImage(newImage);
+    setDicomData(newDicomData);
   };
   
   // 添加新標記
@@ -117,7 +125,7 @@ const DicomViewer = () => {
   return (
     <>
       {/* 標題欄 */}
-      <Header title="Site Title" />
+      <Header title="DICOM Viewer" />
       
       <div className="main-content">
         <div className="left-panel">
@@ -131,10 +139,12 @@ const DicomViewer = () => {
           <DicomCanvas
             dicomFile={dicomFile}
             dicomImage={dicomImage}
+            dicomData={dicomData}
             labels={labels}
             currentPolygon={currentPolygon}
             editingLabelIndex={editingLabelIndex}
             onClick={handleCanvasClick}
+            onImageUpdate={handleImageUpdate}
           />
           
           {/* 繪製控制 */}

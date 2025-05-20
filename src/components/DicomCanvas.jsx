@@ -1,14 +1,17 @@
-// src/components/DicomCanvas.jsx (完整優化版)
+// src/components/DicomCanvas.jsx (支援窗寬/窗位調整)
 import React, { useEffect, useRef, useState } from 'react';
-import { drawPolygon, drawDefaultImage } from '../utils/dicomHelper';
+import { drawPolygon, drawDefaultImage, createDicomImage } from '../utils/dicomHelper';
+import WindowControls from './WindowControls';
 
 const DicomCanvas = ({ 
   dicomFile, 
+  dicomData,
   dicomImage, 
   labels = [], 
   currentPolygon = [], 
   editingLabelIndex = -1, 
-  onClick 
+  onClick,
+  onImageUpdate 
 }) => {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -21,6 +24,9 @@ const DicomCanvas = ({
   const [initialRender, setInitialRender] = useState(true);
   const [showControls, setShowControls] = useState(false);
   
+  // 窗寬/窗位相關狀態
+  const [isInverted, setIsInverted] = useState(false);
+  
   // 重設縮放和平移狀態
   useEffect(() => {
     if (dicomFile && dicomImage) {
@@ -29,6 +35,7 @@ const DicomCanvas = ({
       setOffset({ x: 0, y: 0 });
       setInitialRender(true);
       setShowControls(true);
+      setIsInverted(false);
       
       // 5秒後隱藏控制提示
       const timer = setTimeout(() => {
@@ -110,6 +117,88 @@ const DicomCanvas = ({
     setIsDragging(false);
   };
   
+  // 處理窗寬/窗位變化
+  const handleWindowChange = async (newCenter, newWidth, toggleInvert = false) => {
+    if (!dicomData) return;
+    
+    // 如果是切換反轉
+    if (toggleInvert) {
+      setIsInverted(!isInverted);
+      
+      // 處理反轉
+      const updatedDicomData = {
+        ...dicomData,
+        // 切換光度解釋
+        photometricInterpretation: isInverted ? 
+          'MONOCHROME2' : 'MONOCHROME1'
+      };
+      
+      try {
+        // 重新生成影像
+        const newImage = await createDicomImage(updatedDicomData);
+        // 如果父組件提供了更新函數，則調用它
+        if (onImageUpdate) {
+          onImageUpdate(newImage, updatedDicomData);
+        } else {
+          // 否則直接重繪
+          redrawCanvas(newImage);
+        }
+      } catch (error) {
+        console.error('反轉影像時發生錯誤:', error);
+      }
+      
+      return;
+    }
+    
+    // 創建應用了新窗寬/窗位的圖像
+    const updatedDicomData = {
+      ...dicomData,
+      windowCenter: newCenter,
+      windowWidth: newWidth,
+      photometricInterpretation: isInverted ? 'MONOCHROME1' : 'MONOCHROME2'
+    };
+    
+    try {
+      // 重新生成影像
+      const newImage = await createDicomImage(updatedDicomData);
+      // 如果父組件提供了更新函數，則調用它
+      if (onImageUpdate) {
+        onImageUpdate(newImage, updatedDicomData);
+      } else {
+        // 否則直接重繪
+        redrawCanvas(newImage);
+      }
+    } catch (error) {
+      console.error('窗寬/窗位調整時發生錯誤:', error);
+    }
+  };
+  
+  // 在畫布上重繪影像和標記
+  const redrawCanvas = (image) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.scale(scale, scale);
+    ctx.translate(-offset.x, -offset.y);
+    ctx.drawImage(image, 0, 0);
+    
+    // 繪製標記
+    if (labels.length > 0 || currentPolygon.length > 0) {
+      labels.forEach((label, index) => {
+        drawPolygon(ctx, label.points, index === editingLabelIndex);
+      });
+      
+      if (currentPolygon.length > 0) {
+        drawPolygon(ctx, currentPolygon, true);
+      }
+    }
+    
+    ctx.restore();
+  };
+  
   // 快速導航到區域
   const navigateTo = (position) => {
     if (!dicomImage) return;
@@ -170,7 +259,7 @@ const DicomCanvas = ({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     if (!dicomFile) {
       const ctx = canvas.getContext('2d');
       drawDefaultImage(ctx, canvas.width, canvas.height);
@@ -263,6 +352,10 @@ const DicomCanvas = ({
         case '-':
           setScale(prev => Math.max(prev * 0.9, 0.1));
           break;
+        case 'i':
+          // 快速反轉影像
+          handleWindowChange(null, null, true);
+          break;
         default:
           break;
       }
@@ -270,7 +363,7 @@ const DicomCanvas = ({
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [dicomFile, offset]);
+  }, [dicomFile, offset, dicomData, isInverted]);
   
   return (
     <div
@@ -290,6 +383,15 @@ const DicomCanvas = ({
         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
       />
       
+      {dicomFile && dicomData && (
+        <WindowControls
+          dicomFile={dicomFile}
+          initialWindowCenter={dicomData.windowCenter}
+          initialWindowWidth={dicomData.windowWidth}
+          onWindowChange={handleWindowChange}
+        />
+      )}
+      
       {dicomFile && (
         <div className="zoom-info">
           縮放: {Math.round(scale * 100)}%
@@ -300,7 +402,7 @@ const DicomCanvas = ({
         <div className="controls-hint">
           <p>滑鼠滾輪: 縮放</p>
           <p>按住左鍵: 拖動</p>
-          <p>快捷鍵: 0 (重置), 1 (適合), 2 (居中), + (放大), - (縮小)</p>
+          <p>快捷鍵: 0 (重置), 1 (適合), 2 (居中), + (放大), - (縮小), i (反轉)</p>
         </div>
       )}
       
@@ -310,6 +412,7 @@ const DicomCanvas = ({
           <button onClick={resetView} title="重置 (0)">↺</button>
           <button onClick={() => setScale(prev => Math.min(prev * 1.1, 10))} title="放大 (+)">+</button>
           <button onClick={() => setScale(prev => Math.max(prev * 0.9, 0.1))} title="縮小 (-)">-</button>
+          <button onClick={() => handleWindowChange(null, null, true)} title="反轉 (i)">◐</button>
         </div>
       )}
     </div>

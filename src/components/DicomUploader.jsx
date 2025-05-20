@@ -1,4 +1,4 @@
-// src/components/DicomUploader.jsx (完整優化版)
+// src/components/DicomUploader.jsx (更新版)
 import React, { useRef, useState } from 'react';
 import { parseDicomFile, createDicomImage } from '../utils/dicomHelper';
 
@@ -30,7 +30,7 @@ const DicomUploader = ({ onDicomLoaded }) => {
             const imageObj = await createDicomImage(dicomData);
             
             console.log("DICOM processing complete, image size:", imageObj.width, "x", imageObj.height);
-            onDicomLoaded(file, imageObj, dicomData.patientData);
+            onDicomLoaded(file, imageObj, dicomData.patientData, dicomData);
           } catch (error) {
             console.error('Error processing DICOM file:', error);
             alert('處理DICOM檔案時發生錯誤: ' + error.message);
