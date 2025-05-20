@@ -1,15 +1,11 @@
-// src/components/DicomUploader.jsx (更新版)
+// src/components/DicomUploader.jsx (使用增強的日期處理)
 import React, { useRef, useState } from 'react';
 import { parseDicomFile, createDicomImage } from '../utils/dicomHelper';
+import { calculateAge, formatDate } from '../utils/dateUtils';
 
 const DicomUploader = ({ onDicomLoaded }) => {
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  // 觸發文件選擇對話框
-  const triggerFileInput = () => {
-    fileInputRef.current.click();
-  };
 
   // 處理檔案上傳
   const handleFileUpload = async (event) => {
@@ -26,11 +22,25 @@ const DicomUploader = ({ onDicomLoaded }) => {
             const arrayBuffer = e.target.result;
             const dicomData = parseDicomFile(arrayBuffer);
             
+            // 從出生日期計算年齡
+            const birthdate = dicomData.patientData.birthdate;
+            const calculatedAge = calculateAge(birthdate);
+            
+            // 格式化出生日期為易讀形式
+            const formattedBirthdate = formatDate(birthdate);
+            
+            // 更新患者資訊
+            const patientData = {
+              ...dicomData.patientData,
+              birthdate: formattedBirthdate,
+              age: calculatedAge
+            };
+            
             console.log("Creating DICOM image...");
             const imageObj = await createDicomImage(dicomData);
             
             console.log("DICOM processing complete, image size:", imageObj.width, "x", imageObj.height);
-            onDicomLoaded(file, imageObj, dicomData.patientData, dicomData);
+            onDicomLoaded(file, imageObj, patientData, dicomData);
           } catch (error) {
             console.error('Error processing DICOM file:', error);
             alert('處理DICOM檔案時發生錯誤: ' + error.message);
@@ -52,6 +62,11 @@ const DicomUploader = ({ onDicomLoaded }) => {
         setIsLoading(false);
       }
     }
+  };
+
+  // 觸發文件選擇對話框
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
   };
 
   return (

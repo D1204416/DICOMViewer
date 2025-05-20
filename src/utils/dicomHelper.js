@@ -1,4 +1,4 @@
-// src/utils/dicomHelper.js - 修正明暗度問題
+// src/utils/dicomHelper.js - 優化 DICOM 解析功能
 
 import * as dicomParser from 'dicom-parser';
 
@@ -13,11 +13,57 @@ export const parseDicomFile = (arrayBuffer) => {
     const dataSet = dicomParser.parseDicom(byteArray);
     
     // 解析患者信息
+    const patientName = dataSet.string('x00100010') || 'Unknown';
+    
+    // 提取出生日期 (0010,0030)
+    let birthdate = dataSet.string('x00100030') || 'Unknown';
+    console.log('原始出生日期:', birthdate);
+    
+    // 提取年齡 (0010,1010)
+    let age = dataSet.string('x00101010') || 'Unknown';
+    console.log('原始年齡:', age);
+    
+    // 提取性別 (0010,0040)
+    const sex = dataSet.string('x00100040') || 'Unknown';
+    
+    // 如果在 DICOM 中找不到出生日期，但有年齡，嘗試從年齡推算大概的出生年份
+    if (birthdate === 'Unknown' && age !== 'Unknown') {
+      console.log('嘗試從年齡推算出生年份');
+      // 一般 DICOM 的年齡格式為 "070Y" 表示 70 歲
+      const match = age.match(/^(\d+)([DWMY])$/);
+      if (match) {
+        const value = parseInt(match[1], 10);
+        const unit = match[2];
+        
+        const today = new Date();
+        let birthYear = today.getFullYear();
+        
+        switch (unit) {
+          case 'Y': // 年
+            birthYear -= value;
+            break;
+          case 'M': // 月
+            birthYear = today.getFullYear() - Math.floor(value / 12);
+            break;
+          case 'W': // 周
+            birthYear = today.getFullYear() - Math.floor(value / 52);
+            break;
+          case 'D': // 日
+            birthYear = today.getFullYear() - Math.floor(value / 365);
+            break;
+        }
+        
+        // 生成一個模擬的出生日期 (只有年份是準確的)
+        birthdate = `${birthYear}0101`;
+        console.log('從年齡推算的出生日期:', birthdate);
+      }
+    }
+    
     const patientData = {
-      patientName: dataSet.string('x00100010') || 'Unknown',
-      birthdate: dataSet.string('x00100030') || 'Unknown',
-      age: dataSet.string('x00101010') || 'Unknown',
-      sex: dataSet.string('x00100040') || 'Unknown'
+      patientName,
+      birthdate,
+      age,
+      sex
     };
     
     // 處理影像數據
@@ -68,7 +114,8 @@ export const parseDicomFile = (arrayBuffer) => {
       photometricInterpretation,
       windowCenter,
       windowWidth,
-      transferSyntaxUID
+      transferSyntaxUID,
+      patientData
     });
     
     return {
@@ -106,9 +153,9 @@ export const createDicomImage = async (dicomData) => {
     columns,
     bitsAllocated,
     pixelRepresentation,
-    photometricInterpretation,
     windowCenter,
-    windowWidth
+    windowWidth,
+    photometricInterpretation
   } = dicomData;
   
   // 創建離屏Canvas用於處理圖像
@@ -140,6 +187,8 @@ export const createDicomImage = async (dicomData) => {
     pixelData = new Uint8Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length);
   }
   
+  //
+  
   // 查找最小和最大像素值，用於自動窗口調整
   let min = Number.MAX_VALUE;
   let max = Number.MIN_VALUE;
@@ -157,12 +206,8 @@ export const createDicomImage = async (dicomData) => {
   
   console.log("Pixel range:", { min, max, windowCenter, windowWidth });
   
-  // 確定是否需要反轉，基於光度解釋
-  // MONOCHROME1: 黑白反轉，高密度區域顯示為黑色
-  // MONOCHROME2: 標準顯示，高密度區域顯示為白色
-  const shouldInvert = photometricInterpretation === 'MONOCHROME1';
-  
-  console.log("Photometric Interpretation:", photometricInterpretation, "Should Invert:", shouldInvert);
+  // 確定需要應用的變換 (基於光度解釋)
+  const invert = photometricInterpretation === 'MONOCHROME1';
   
   // 轉換成ImageData格式
   let pixelIndex = 0;
@@ -185,7 +230,7 @@ export const createDicomImage = async (dicomData) => {
       adjustedValue = Math.max(0, Math.min(255, adjustedValue));
       
       // 如果是 MONOCHROME1，則反轉亮度
-      if (shouldInvert) {
+      if (invert) {
         adjustedValue = 255 - adjustedValue;
       }
       
