@@ -1,4 +1,4 @@
-// src/components/DicomUploader.jsx
+// src/components/DicomUploader.jsx (更新版)
 import React, { useRef } from 'react';
 import { parseDicomFile, createDicomImage } from '../utils/dicomHelper';
 
@@ -11,12 +11,12 @@ const DicomUploader = ({ onDicomLoaded }) => {
   };
 
   // 處理檔案上傳
-  const handleFileUpload = (event) => {
+  const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
       
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
           const arrayBuffer = e.target.result;
           const {
@@ -30,7 +30,7 @@ const DicomUploader = ({ onDicomLoaded }) => {
           } = parseDicomFile(arrayBuffer);
           
           // 生成圖像並傳遞回上層
-          const imageObj = createDicomImage(
+          const imageObj = await createDicomImage(
             dataSet, 
             pixelDataElement, 
             rows, 

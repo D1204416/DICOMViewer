@@ -56,44 +56,50 @@ export const parseDicomFile = (arrayBuffer) => {
  * @param {number} columns - 圖像列數
  * @param {number} windowCenter - 窗口中心值
  * @param {number} windowWidth - 窗口寬度
- * @returns {HTMLImageElement} 處理後的圖像
+ * @returns {Promise<HTMLImageElement>} 處理後的圖像
  */
 export const createDicomImage = (dataSet, pixelDataElement, rows, columns, windowCenter, windowWidth) => {
-  // 創建離屏Canvas用於處理圖像
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  
-  // 設置Canvas尺寸與圖像尺寸相匹配
-  canvas.width = columns;
-  canvas.height = rows;
-  
-  // 創建圖像數據
-  const imageData = ctx.createImageData(columns, rows);
-  
-  // 獲取像素數據
-  const pixelData = new Uint8Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length);
-  
-  // 轉換成ImageData格式
-  for (let i = 0; i < pixelData.length; i++) {
-    const pixelValue = pixelData[i];
+  return new Promise((resolve) => {
+    // 創建離屏Canvas用於處理圖像
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
     
-    // 簡單的窗口級別調整
-    let adjustedValue = ((pixelValue - windowCenter) / windowWidth + 0.5) * 255;
-    adjustedValue = Math.max(0, Math.min(255, adjustedValue));
+    // 設置Canvas尺寸與圖像尺寸相匹配
+    canvas.width = columns;
+    canvas.height = rows;
     
-    imageData.data[i * 4] = adjustedValue;     // R
-    imageData.data[i * 4 + 1] = adjustedValue; // G
-    imageData.data[i * 4 + 2] = adjustedValue; // B
-    imageData.data[i * 4 + 3] = 255;          // Alpha
-  }
-  
-  // 放置圖像數據到Canvas
-  ctx.putImageData(imageData, 0, 0);
-  
-  // 創建圖像對象並返回
-  const img = new Image();
-  img.src = canvas.toDataURL();
-  return img;
+    // 創建圖像數據
+    const imageData = ctx.createImageData(columns, rows);
+    
+    // 獲取像素數據
+    const pixelData = new Uint8Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length);
+    
+    // 轉換成ImageData格式
+    for (let i = 0; i < pixelData.length; i++) {
+      const pixelValue = pixelData[i];
+      
+      // 簡單的窗口級別調整
+      let adjustedValue = ((pixelValue - windowCenter) / windowWidth + 0.5) * 255;
+      adjustedValue = Math.max(0, Math.min(255, adjustedValue));
+      
+      imageData.data[i * 4] = adjustedValue;     // R
+      imageData.data[i * 4 + 1] = adjustedValue; // G
+      imageData.data[i * 4 + 2] = adjustedValue; // B
+      imageData.data[i * 4 + 3] = 255;          // Alpha
+    }
+    
+    // 放置圖像數據到Canvas
+    ctx.putImageData(imageData, 0, 0);
+    
+    // 創建圖像對象並返回
+    const img = new Image();
+    
+    img.onload = () => {
+      resolve(img);
+    };
+    
+    img.src = canvas.toDataURL();
+  });
 };
 
 /**
