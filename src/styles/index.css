@@ -119,9 +119,11 @@ body {
 }
 
 canvas {
-  touch-action: none; /* 防止移動設備的觸控導致頁面縮放或滾動 */
+  touch-action: none;
+  /* 防止移動設備的觸控導致頁面縮放或滾動 */
   background-color: #f0f0f0;
-  display: block; /* 避免底部有不必要的空間 */
+  display: block;
+  /* 避免底部有不必要的空間 */
 }
 
 .drawing-controls {
