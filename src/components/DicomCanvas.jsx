@@ -1,5 +1,5 @@
-// src/components/DicomCanvas.jsx (支援窗寬/窗位調整)
-import React, { useEffect, useRef, useState } from 'react';
+// src/components/DicomCanvas.jsx (調整影像尺寸)
+import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { drawPolygon, drawDefaultImage, createDicomImage } from '../utils/dicomHelper';
 import WindowControls from './WindowControls';
 
@@ -23,9 +23,44 @@ const DicomCanvas = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [initialRender, setInitialRender] = useState(true);
   const [showControls, setShowControls] = useState(false);
+  const [canvasSize, setCanvasSize] = useState({ width: 512, height: 512 });
   
   // 窗寬/窗位相關狀態
   const [isInverted, setIsInverted] = useState(false);
+  
+  // 調整Canvas大小適應容器
+  useLayoutEffect(() => {
+    const updateCanvasSize = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth;
+        const containerHeight = containerRef.current.clientHeight;
+        
+        // 保持容器的寬度，計算等比例的高度
+        const aspectRatio = dicomImage ? dicomImage.height / dicomImage.width : 1;
+        let newWidth = containerWidth - 40; // 留一點邊距
+        let newHeight = newWidth * aspectRatio;
+        
+        // 如果計算出的高度超過容器高度，則根據高度重新計算
+        if (newHeight > containerHeight - 40) {
+          newHeight = containerHeight - 40;
+          newWidth = newHeight / aspectRatio;
+        }
+        
+        // 設定Canvas的大小
+        setCanvasSize({
+          width: Math.floor(newWidth),
+          height: Math.floor(newHeight)
+        });
+      }
+    };
+    
+    // 初始化時調整大小
+    updateCanvasSize();
+    
+    // 當窗口大小變化時重新計算
+    window.addEventListener('resize', updateCanvasSize);
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, [containerRef, dicomImage]);
   
   // 重設縮放和平移狀態
   useEffect(() => {
@@ -53,9 +88,17 @@ const DicomCanvas = ({
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     
+    // 計算原始圖像和畫布的比例
+    const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
+    const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
+    
     // 計算點擊位置相對於原始圖像的座標
-    const x = (e.clientX - rect.left) / scale + offset.x;
-    const y = (e.clientY - rect.top) / scale + offset.y;
+    const canvasX = (e.clientX - rect.left) / scale;
+    const canvasY = (e.clientY - rect.top) / scale;
+    
+    // 轉換為原始圖像座標
+    const x = canvasX * imageToCanvasRatioX + offset.x;
+    const y = canvasY * imageToCanvasRatioY + offset.y;
     
     onClick({ x, y });
   };
@@ -75,12 +118,19 @@ const DicomCanvas = ({
     // 計算滑鼠位置在原始圖像上的座標
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left) / scale + offset.x;
-    const mouseY = (e.clientY - rect.top) / scale + offset.y;
+    
+    const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
+    const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
+    
+    const canvasX = (e.clientX - rect.left) / scale;
+    const canvasY = (e.clientY - rect.top) / scale;
+    
+    const mouseX = canvasX * imageToCanvasRatioX + offset.x;
+    const mouseY = canvasY * imageToCanvasRatioY + offset.y;
     
     // 計算新的偏移量，使滑鼠位置保持在同一點
-    const newOffsetX = mouseX - (e.clientX - rect.left) / (scale * delta);
-    const newOffsetY = mouseY - (e.clientY - rect.top) / (scale * delta);
+    const newOffsetX = mouseX - canvasX * imageToCanvasRatioX * delta;
+    const newOffsetY = mouseY - canvasY * imageToCanvasRatioY * delta;
     
     setScale(newScale);
     setOffset({ x: newOffsetX, y: newOffsetY });
@@ -104,9 +154,12 @@ const DicomCanvas = ({
     const dx = e.clientX - dragStart.x;
     const dy = e.clientY - dragStart.y;
     
+    const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
+    const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
+    
     // 計算新的偏移量
-    const newOffsetX = offset.x - dx / scale;
-    const newOffsetY = offset.y - dy / scale;
+    const newOffsetX = offset.x - (dx / scale) * imageToCanvasRatioX;
+    const newOffsetY = offset.y - (dy / scale) * imageToCanvasRatioY;
     
     setOffset({ x: newOffsetX, y: newOffsetY });
     setDragStart({ x: e.clientX, y: e.clientY });
@@ -182,17 +235,40 @@ const DicomCanvas = ({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.scale(scale, scale);
-    ctx.translate(-offset.x, -offset.y);
-    ctx.drawImage(image, 0, 0);
     
-    // 繪製標記
+    // 計算圖像縮放比例
+    const imageToCanvasRatioX = image.width / canvasSize.width;
+    const imageToCanvasRatioY = image.height / canvasSize.height;
+    
+    // 繪製影像時考慮偏移和縮放
+    ctx.drawImage(
+      image, 
+      offset.x, offset.y, 
+      canvasSize.width * imageToCanvasRatioX / scale, 
+      canvasSize.height * imageToCanvasRatioY / scale,
+      0, 0, 
+      canvasSize.width / scale, 
+      canvasSize.height / scale
+    );
+    
+    // 繪製標記，考慮偏移和縮放
     if (labels.length > 0 || currentPolygon.length > 0) {
-      labels.forEach((label, index) => {
-        drawPolygon(ctx, label.points, index === editingLabelIndex);
+      // 繪製標記時需要調整座標
+      const adjustPoint = (point) => ({
+        x: (point.x - offset.x) / imageToCanvasRatioX,
+        y: (point.y - offset.y) / imageToCanvasRatioY
       });
       
+      // 繪製已有標記
+      labels.forEach((label, index) => {
+        const adjustedPoints = label.points.map(adjustPoint);
+        drawPolygon(ctx, adjustedPoints, index === editingLabelIndex);
+      });
+      
+      // 繪製當前正在繪製的多邊形
       if (currentPolygon.length > 0) {
-        drawPolygon(ctx, currentPolygon, true);
+        const adjustedPoints = currentPolygon.map(adjustPoint);
+        drawPolygon(ctx, adjustedPoints, true);
       }
     }
     
@@ -203,44 +279,37 @@ const DicomCanvas = ({
   const navigateTo = (position) => {
     if (!dicomImage) return;
     
+    const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
+    const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
+    
     let targetX = offset.x;
     let targetY = offset.y;
     
     switch (position) {
       case 'center':
-        targetX = dicomImage.width / 2 - window.innerWidth / (2 * scale);
-        targetY = dicomImage.height / 2 - window.innerHeight / (2 * scale);
+        targetX = (dicomImage.width - canvasSize.width * imageToCanvasRatioX / scale) / 2;
+        targetY = (dicomImage.height - canvasSize.height * imageToCanvasRatioY / scale) / 2;
         break;
       case 'top-left':
         targetX = 0;
         targetY = 0;
         break;
       case 'top-right':
-        targetX = dicomImage.width - window.innerWidth / scale;
+        targetX = dicomImage.width - canvasSize.width * imageToCanvasRatioX / scale;
         targetY = 0;
         break;
       case 'bottom-left':
         targetX = 0;
-        targetY = dicomImage.height - window.innerHeight / scale;
+        targetY = dicomImage.height - canvasSize.height * imageToCanvasRatioY / scale;
         break;
       case 'bottom-right':
-        targetX = dicomImage.width - window.innerWidth / scale;
-        targetY = dicomImage.height - window.innerHeight / scale;
+        targetX = dicomImage.width - canvasSize.width * imageToCanvasRatioX / scale;
+        targetY = dicomImage.height - canvasSize.height * imageToCanvasRatioY / scale;
         break;
       case 'fit':
-        // 計算適合窗口的縮放比例
-        const container = containerRef.current;
-        if (container && dicomImage) {
-          const containerWidth = container.clientWidth;
-          const containerHeight = container.clientHeight;
-          const scaleX = containerWidth / dicomImage.width;
-          const scaleY = containerHeight / dicomImage.height;
-          const newScale = Math.min(scaleX, scaleY, 1);
-          
-          setScale(newScale);
-          targetX = 0;
-          targetY = 0;
-        }
+        setScale(1);
+        targetX = 0;
+        targetY = 0;
         break;
       default:
         break;
@@ -270,53 +339,67 @@ const DicomCanvas = ({
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
-    if (!canvas || !container || !dicomFile) return;
+    if (!canvas || !container) return;
     
-    // 首次渲染時計算初始縮放比例
-    if (dicomImage && initialRender) {
-      // 設定Canvas的畫布大小為影像的實際大小
-      canvas.width = dicomImage.width;
-      canvas.height = dicomImage.height;
-      
-      // 計算縮放比例，使影像能夠完整顯示在容器中
-      const containerWidth = container.clientWidth;
-      const containerHeight = container.clientHeight;
-      const scaleX = containerWidth / dicomImage.width;
-      const scaleY = containerHeight / dicomImage.height;
-      const initialScale = Math.min(scaleX, scaleY, 1);
-      
-      setScale(initialScale);
-      setInitialRender(false);
-      return; // 等待下一次渲染
+    // 設置Canvas的顯示尺寸
+    canvas.width = canvasSize.width;
+    canvas.height = canvasSize.height;
+    
+    if (!dicomFile) {
+      const ctx = canvas.getContext('2d');
+      drawDefaultImage(ctx, canvas.width, canvas.height);
+      return;
     }
+    
+    if (!dicomImage) return;
     
     const ctx = canvas.getContext('2d');
     
     // 清除畫布
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // 使用縮放和平移進行繪製
+    // 繪製影像，考慮偏移和縮放
+    const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
+    const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
+    
     ctx.save();
     ctx.scale(scale, scale);
-    ctx.translate(-offset.x, -offset.y);
     
-    // 繪製圖像
-    if (dicomImage) {
-      ctx.drawImage(dicomImage, 0, 0);
-    }
+    // 繪製調整後的影像
+    ctx.drawImage(
+      dicomImage, 
+      offset.x, offset.y, 
+      canvasSize.width * imageToCanvasRatioX / scale, 
+      canvasSize.height * imageToCanvasRatioY / scale,
+      0, 0, 
+      canvasSize.width / scale, 
+      canvasSize.height / scale
+    );
     
-    // 繪製所有現有標記
-    labels.forEach((label, index) => {
-      drawPolygon(ctx, label.points, index === editingLabelIndex);
-    });
-    
-    // 繪製目前正在繪製的多邊形
-    if (currentPolygon.length > 0) {
-      drawPolygon(ctx, currentPolygon, true);
+    // 繪製標記，考慮偏移和縮放
+    if (labels.length > 0 || currentPolygon.length > 0) {
+      // 繪製標記時需要調整座標
+      const adjustPoint = (point) => ({
+        x: (point.x - offset.x) / imageToCanvasRatioX,
+        y: (point.y - offset.y) / imageToCanvasRatioY
+      });
+      
+      // 繪製已有標記
+      labels.forEach((label, index) => {
+        const adjustedPoints = label.points.map(adjustPoint);
+        drawPolygon(ctx, adjustedPoints, index === editingLabelIndex);
+      });
+      
+      // 繪製當前正在繪製的多邊形
+      if (currentPolygon.length > 0) {
+        const adjustedPoints = currentPolygon.map(adjustPoint);
+        drawPolygon(ctx, adjustedPoints, true);
+      }
     }
     
     ctx.restore();
-  }, [dicomFile, dicomImage, labels, currentPolygon, editingLabelIndex, scale, offset, initialRender]);
+    
+  }, [dicomFile, dicomImage, labels, currentPolygon, editingLabelIndex, scale, offset, canvasSize]);
   
   // 鍵盤快捷鍵
   useEffect(() => {
@@ -377,10 +460,14 @@ const DicomCanvas = ({
     >
       <canvas 
         ref={canvasRef} 
-        width={512} 
-        height={512} 
+        width={canvasSize.width} 
+        height={canvasSize.height} 
         onClick={handleCanvasClick}
-        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        style={{ 
+          cursor: isDragging ? 'grabbing' : 'grab',
+          display: 'block',
+          margin: 'auto'
+        }}
       />
       
       {dicomFile && dicomData && (
