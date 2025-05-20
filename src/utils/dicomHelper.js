@@ -1,4 +1,5 @@
-// src/utils/dicomHelper.js
+// src/utils/dicomHelper.js - 優化 DICOM 解析功能
+
 import * as dicomParser from 'dicom-parser';
 
 /**
@@ -26,20 +27,57 @@ export const parseDicomFile = (arrayBuffer) => {
       throw new Error('無法找到像素數據');
     }
     
+    // 獲取重要的影像參數
     const rows = dataSet.uint16('x00280010');
     const columns = dataSet.uint16('x00280011');
+    const bitsAllocated = dataSet.uint16('x00280100') || 8;
+    const bitsStored = dataSet.uint16('x00280101') || 8;
+    const highBit = dataSet.uint16('x00280102') || 7;
+    const pixelRepresentation = dataSet.uint16('x00280103') || 0;
+    const samplesPerPixel = dataSet.uint16('x00280002') || 1;
+    const planarConfiguration = dataSet.uint16('x00280006') || 0;
+    const photometricInterpretation = dataSet.string('x00280004') || 'MONOCHROME2';
     
-    // 獲取視窗寬度和中心值
-    const windowCenter = dataSet.string('x00281050') || 127;
-    const windowWidth = dataSet.string('x00281051') || 256;
+    // 獲取窗口寬度和中心值 (如果有的話)
+    let windowCenter = dataSet.floatString('x00281050', 0) || 127;
+    let windowWidth = dataSet.floatString('x00281051', 0) || 256;
+    
+    // 如果窗口值是陣列，取第一個值
+    if (Array.isArray(windowCenter)) windowCenter = windowCenter[0];
+    if (Array.isArray(windowWidth)) windowWidth = windowWidth[0];
+    
+    // 檢查 transfer syntax UID，以確定是否是壓縮的 DICOM
+    const transferSyntaxUID = dataSet.string('x00020010') || '1.2.840.10008.1.2'; // 默認為隱式 VR 小端
+    
+    console.log("DICOM Info:", {
+      rows,
+      columns,
+      bitsAllocated,
+      bitsStored,
+      highBit,
+      pixelRepresentation,
+      samplesPerPixel,
+      planarConfiguration,
+      photometricInterpretation,
+      windowCenter,
+      windowWidth,
+      transferSyntaxUID
+    });
     
     return {
       dataSet,
       pixelDataElement,
       rows,
       columns,
+      bitsAllocated,
+      bitsStored,
+      highBit,
+      pixelRepresentation,
+      samplesPerPixel,
+      photometricInterpretation,
       windowCenter,
       windowWidth,
+      transferSyntaxUID,
       patientData
     };
   } catch (error) {
@@ -50,54 +88,115 @@ export const parseDicomFile = (arrayBuffer) => {
 
 /**
  * 從 DICOM 數據集創建圖像
- * @param {Object} dataSet - DICOM 數據集
- * @param {Object} pixelDataElement - 像素數據元素
- * @param {number} rows - 圖像行數
- * @param {number} columns - 圖像列數
- * @param {number} windowCenter - 窗口中心值
- * @param {number} windowWidth - 窗口寬度
+ * @param {Object} dicomData - 解析後的 DICOM 數據
  * @returns {Promise<HTMLImageElement>} 處理後的圖像
  */
-export const createDicomImage = (dataSet, pixelDataElement, rows, columns, windowCenter, windowWidth) => {
-  return new Promise((resolve) => {
-    // 創建離屏Canvas用於處理圖像
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // 設置Canvas尺寸與圖像尺寸相匹配
-    canvas.width = columns;
-    canvas.height = rows;
-    
-    // 創建圖像數據
-    const imageData = ctx.createImageData(columns, rows);
-    
-    // 獲取像素數據
-    const pixelData = new Uint8Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length);
-    
-    // 轉換成ImageData格式
-    for (let i = 0; i < pixelData.length; i++) {
-      const pixelValue = pixelData[i];
+export const createDicomImage = async (dicomData) => {
+  const {
+    dataSet,
+    pixelDataElement,
+    rows,
+    columns,
+    bitsAllocated,
+    pixelRepresentation,
+    windowCenter,
+    windowWidth,
+    photometricInterpretation
+  } = dicomData;
+  
+  // 創建離屏Canvas用於處理圖像
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  // 設置Canvas尺寸與圖像尺寸相匹配
+  canvas.width = columns;
+  canvas.height = rows;
+  
+  // 創建圖像數據
+  const imageData = ctx.createImageData(columns, rows);
+  
+  // 獲取像素數據
+  let pixelData;
+  const isUint16 = bitsAllocated === 16;
+  
+  if (isUint16) {
+    // 16位像素數據
+    if (pixelRepresentation === 0) {
+      // 無符號整數
+      pixelData = new Uint16Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length / 2);
+    } else {
+      // 有符號整數
+      pixelData = new Int16Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length / 2);
+    }
+  } else {
+    // 8位像素數據
+    pixelData = new Uint8Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length);
+  }
+  
+  // 查找最小和最大像素值，用於自動窗口調整
+  let min = Number.MAX_VALUE;
+  let max = Number.MIN_VALUE;
+  
+  for (let i = 0; i < pixelData.length; i++) {
+    if (pixelData[i] < min) min = pixelData[i];
+    if (pixelData[i] > max) max = pixelData[i];
+  }
+  
+  // 如果沒有設置窗口值或窗口值不合理，使用計算出的最小/最大值
+  if (windowWidth <= 0 || windowCenter < min || windowCenter > max) {
+    windowWidth = max - min;
+    windowCenter = min + windowWidth / 2;
+  }
+  
+  console.log("Pixel range:", { min, max, windowCenter, windowWidth });
+  
+  // 確定需要應用的變換 (基於光度解釋)
+  const invert = photometricInterpretation === 'MONOCHROME1';
+  
+  // 轉換成ImageData格式
+  let pixelIndex = 0;
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < columns; x++) {
+      const pixelValue = pixelData[pixelIndex];
       
       // 簡單的窗口級別調整
-      let adjustedValue = ((pixelValue - windowCenter) / windowWidth + 0.5) * 255;
+      let adjustedValue;
+      
+      if (windowWidth === 0) {
+        // 避免除以零
+        adjustedValue = pixelValue >= windowCenter ? 255 : 0;
+      } else {
+        // 標準窗口級別調整
+        adjustedValue = 255 * (pixelValue - (windowCenter - 0.5 * windowWidth)) / windowWidth;
+      }
+      
+      // 限制在 0-255 範圍內
       adjustedValue = Math.max(0, Math.min(255, adjustedValue));
       
-      imageData.data[i * 4] = adjustedValue;     // R
-      imageData.data[i * 4 + 1] = adjustedValue; // G
-      imageData.data[i * 4 + 2] = adjustedValue; // B
-      imageData.data[i * 4 + 3] = 255;          // Alpha
+      // 如果是 MONOCHROME1，則反轉亮度
+      if (invert) {
+        adjustedValue = 255 - adjustedValue;
+      }
+      
+      const dataIndex = (y * columns + x) * 4;
+      imageData.data[dataIndex] = adjustedValue;     // R
+      imageData.data[dataIndex + 1] = adjustedValue; // G
+      imageData.data[dataIndex + 2] = adjustedValue; // B
+      imageData.data[dataIndex + 3] = 255;           // Alpha
+      
+      pixelIndex++;
     }
-    
-    // 放置圖像數據到Canvas
-    ctx.putImageData(imageData, 0, 0);
-    
-    // 創建圖像對象並返回
+  }
+  
+  // 放置圖像數據到Canvas
+  ctx.putImageData(imageData, 0, 0);
+  
+  // 創建圖像對象並返回
+  return new Promise((resolve) => {
     const img = new Image();
-    
     img.onload = () => {
       resolve(img);
     };
-    
     img.src = canvas.toDataURL();
   });
 };

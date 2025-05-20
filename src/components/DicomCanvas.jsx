@@ -1,4 +1,4 @@
-// src/components/DicomCanvas.jsx (具有縮放功能)
+// src/components/DicomCanvas.jsx (完整優化版)
 import React, { useEffect, useRef, useState } from 'react';
 import { drawPolygon, drawDefaultImage } from '../utils/dicomHelper';
 
@@ -19,7 +19,8 @@ const DicomCanvas = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [initialRender, setInitialRender] = useState(true);
-
+  const [showControls, setShowControls] = useState(false);
+  
   // 重設縮放和平移狀態
   useEffect(() => {
     if (dicomFile && dicomImage) {
@@ -27,9 +28,17 @@ const DicomCanvas = ({
       setScale(1);
       setOffset({ x: 0, y: 0 });
       setInitialRender(true);
+      setShowControls(true);
+      
+      // 5秒後隱藏控制提示
+      const timer = setTimeout(() => {
+        setShowControls(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
     }
   }, [dicomFile, dicomImage]);
-
+  
   // 處理畫布點擊
   const handleCanvasClick = (e) => {
     if (!dicomFile || isDragging) return;
@@ -43,7 +52,7 @@ const DicomCanvas = ({
     
     onClick({ x, y });
   };
-
+  
   // 處理滑鼠滾輪縮放
   const handleWheel = (e) => {
     if (!dicomFile) return;
@@ -69,15 +78,18 @@ const DicomCanvas = ({
     setScale(newScale);
     setOffset({ x: newOffsetX, y: newOffsetY });
   };
-
+  
   // 處理拖動開始
   const handleMouseDown = (e) => {
     if (!dicomFile) return;
     
+    // 只有使用滑鼠左鍵時才啟動拖動
+    if (e.button !== 0) return;
+    
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
   };
-
+  
   // 處理拖動
   const handleMouseMove = (e) => {
     if (!isDragging) return;
@@ -92,23 +104,79 @@ const DicomCanvas = ({
     setOffset({ x: newOffsetX, y: newOffsetY });
     setDragStart({ x: e.clientX, y: e.clientY });
   };
-
+  
   // 處理拖動結束
   const handleMouseUp = () => {
     setIsDragging(false);
   };
-
+  
+  // 快速導航到區域
+  const navigateTo = (position) => {
+    if (!dicomImage) return;
+    
+    let targetX = offset.x;
+    let targetY = offset.y;
+    
+    switch (position) {
+      case 'center':
+        targetX = dicomImage.width / 2 - window.innerWidth / (2 * scale);
+        targetY = dicomImage.height / 2 - window.innerHeight / (2 * scale);
+        break;
+      case 'top-left':
+        targetX = 0;
+        targetY = 0;
+        break;
+      case 'top-right':
+        targetX = dicomImage.width - window.innerWidth / scale;
+        targetY = 0;
+        break;
+      case 'bottom-left':
+        targetX = 0;
+        targetY = dicomImage.height - window.innerHeight / scale;
+        break;
+      case 'bottom-right':
+        targetX = dicomImage.width - window.innerWidth / scale;
+        targetY = dicomImage.height - window.innerHeight / scale;
+        break;
+      case 'fit':
+        // 計算適合窗口的縮放比例
+        const container = containerRef.current;
+        if (container && dicomImage) {
+          const containerWidth = container.clientWidth;
+          const containerHeight = container.clientHeight;
+          const scaleX = containerWidth / dicomImage.width;
+          const scaleY = containerHeight / dicomImage.height;
+          const newScale = Math.min(scaleX, scaleY, 1);
+          
+          setScale(newScale);
+          targetX = 0;
+          targetY = 0;
+        }
+        break;
+      default:
+        break;
+    }
+    
+    setOffset({ x: targetX, y: targetY });
+  };
+  
+  // 重置視圖
+  const resetView = () => {
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
+  };
+  
   // 當沒有檔案時，繪製預設界面
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
+    
     if (!dicomFile) {
       const ctx = canvas.getContext('2d');
       drawDefaultImage(ctx, canvas.width, canvas.height);
     }
   }, [dicomFile]);
-
+  
   // 更新 Canvas 顯示
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -160,7 +228,50 @@ const DicomCanvas = ({
     
     ctx.restore();
   }, [dicomFile, dicomImage, labels, currentPolygon, editingLabelIndex, scale, offset, initialRender]);
-
+  
+  // 鍵盤快捷鍵
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!dicomFile) return;
+      
+      switch (e.key) {
+        case '0':
+          resetView();
+          break;
+        case '1':
+          navigateTo('fit');
+          break;
+        case '2':
+          navigateTo('center');
+          break;
+        case '3':
+          navigateTo('top-left');
+          break;
+        case '4':
+          navigateTo('top-right');
+          break;
+        case '5':
+          navigateTo('bottom-left');
+          break;
+        case '6':
+          navigateTo('bottom-right');
+          break;
+        case '+':
+        case '=':
+          setScale(prev => Math.min(prev * 1.1, 10));
+          break;
+        case '-':
+          setScale(prev => Math.max(prev * 0.9, 0.1));
+          break;
+        default:
+          break;
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [dicomFile, offset]);
+  
   return (
     <div
       ref={containerRef}
@@ -178,9 +289,27 @@ const DicomCanvas = ({
         onClick={handleCanvasClick}
         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
       />
+      
       {dicomFile && (
         <div className="zoom-info">
           縮放: {Math.round(scale * 100)}%
+        </div>
+      )}
+      
+      {showControls && dicomFile && (
+        <div className="controls-hint">
+          <p>滑鼠滾輪: 縮放</p>
+          <p>按住左鍵: 拖動</p>
+          <p>快捷鍵: 0 (重置), 1 (適合), 2 (居中), + (放大), - (縮小)</p>
+        </div>
+      )}
+      
+      {dicomFile && (
+        <div className="navigation-controls">
+          <button onClick={() => navigateTo('fit')} title="適合視窗 (1)">🔍</button>
+          <button onClick={resetView} title="重置 (0)">↺</button>
+          <button onClick={() => setScale(prev => Math.min(prev * 1.1, 10))} title="放大 (+)">+</button>
+          <button onClick={() => setScale(prev => Math.max(prev * 0.9, 0.1))} title="縮小 (-)">-</button>
         </div>
       )}
     </div>

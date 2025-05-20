@@ -1,4 +1,4 @@
-// src/DicomViewer.jsx
+// src/DicomViewer.jsx (完整優化版)
 import React, { useState } from 'react';
 import Header from './components/Header';
 import DicomUploader from './components/DicomUploader';
@@ -26,9 +26,16 @@ const DicomViewer = () => {
   
   // 處理檔案上傳完成
   const handleDicomLoaded = (file, imageObj, patientData) => {
+    console.log("DICOM loaded:", file.name, "Image size:", imageObj.width, "x", imageObj.height);
     setDicomFile(file);
     setDicomImage(imageObj);
     setPatientInfo(patientData);
+    
+    // 清除現有標記
+    setLabels([]);
+    setCurrentPolygon([]);
+    setIsDrawing(false);
+    setEditingLabelIndex(-1);
   };
   
   // 添加新標記
@@ -36,6 +43,7 @@ const DicomViewer = () => {
     if (dicomFile) {
       setIsDrawing(true);
       setCurrentPolygon([]);
+      setEditingLabelIndex(-1);
     }
   };
   
@@ -48,8 +56,16 @@ const DicomViewer = () => {
       };
       
       setLabels([...labels, newLabel]);
+    } else {
+      alert('多邊形需要至少3個點。已取消繪製。');
     }
     
+    setIsDrawing(false);
+    setCurrentPolygon([]);
+  };
+  
+  // 取消繪製
+  const cancelDrawing = () => {
     setIsDrawing(false);
     setCurrentPolygon([]);
   };
@@ -57,6 +73,7 @@ const DicomViewer = () => {
   // 編輯標記
   const editLabel = (index) => {
     setEditingLabelIndex(index);
+    setIsDrawing(false);
   };
   
   // 完成編輯
@@ -64,11 +81,22 @@ const DicomViewer = () => {
     setEditingLabelIndex(-1);
   };
   
+  // 取消編輯
+  const cancelEditing = () => {
+    const updatedLabels = [...labels];
+    if (editingLabelIndex >= 0 && editingLabelIndex < updatedLabels.length) {
+      // 恢復到原始點，移除最後加入的點
+      setEditingLabelIndex(-1);
+    }
+  };
+  
   // 刪除標記
   const deleteLabel = (index) => {
-    const updatedLabels = [...labels];
-    updatedLabels.splice(index, 1);
-    setLabels(updatedLabels);
+    if (window.confirm('確定要刪除這個標記嗎？')) {
+      const updatedLabels = [...labels];
+      updatedLabels.splice(index, 1);
+      setLabels(updatedLabels);
+    }
   };
   
   // 處理畫布點擊
@@ -115,6 +143,8 @@ const DicomViewer = () => {
             editingLabelIndex={editingLabelIndex}
             onFinishDrawing={finishDrawing}
             onFinishEditing={finishEditing}
+            onCancelDrawing={cancelDrawing}
+            onCancelEditing={cancelEditing}
           />
         </div>
         

@@ -1,11 +1,13 @@
-// src/components/DrawingControls.jsx
+// src/components/DrawingControls.jsx (完整優化版)
 import React from 'react';
 
 const DrawingControls = ({ 
   isDrawing, 
   editingLabelIndex, 
   onFinishDrawing, 
-  onFinishEditing 
+  onFinishEditing,
+  onCancelDrawing,
+  onCancelEditing
 }) => {
   if (!isDrawing && editingLabelIndex === -1) {
     return null;
@@ -16,24 +18,40 @@ const DrawingControls = ({
       {isDrawing && (
         <>
           <p>點擊圖像添加多邊形頂點。至少需要3個點。</p>
-          <button 
-            onClick={onFinishDrawing} 
-            className="finish-button"
-          >
-            完成繪製
-          </button>
+          <div className="button-group">
+            <button 
+              onClick={onFinishDrawing} 
+              className="finish-button"
+            >
+              完成繪製
+            </button>
+            <button 
+              onClick={onCancelDrawing} 
+              className="cancel-button"
+            >
+              取消
+            </button>
+          </div>
         </>
       )}
       
       {editingLabelIndex !== -1 && (
         <>
           <p>編輯標記 #{editingLabelIndex + 1}. 點擊圖像添加更多頂點。</p>
-          <button 
-            onClick={onFinishEditing} 
-            className="finish-button"
-          >
-            完成編輯
-          </button>
+          <div className="button-group">
+            <button 
+              onClick={onFinishEditing} 
+              className="finish-button"
+            >
+              完成編輯
+            </button>
+            <button 
+              onClick={onCancelEditing} 
+              className="cancel-button"
+            >
+              取消
+            </button>
+          </div>
         </>
       )}
     </div>
