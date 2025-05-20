@@ -1,4 +1,4 @@
-// src/components/DicomCanvas.jsx
+// src/components/DicomCanvas.jsx (修改版)
 import React, { useEffect, useRef } from 'react';
 import { drawPolygon, drawDefaultImage } from '../utils/dicomHelper';
 
@@ -11,6 +11,7 @@ const DicomCanvas = ({
   onClick 
 }) => {
   const canvasRef = useRef(null);
+  const containerRef = useRef(null);
 
   // 處理畫布點擊
   const handleCanvasClick = (e) => {
@@ -18,8 +19,13 @@ const DicomCanvas = ({
     
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    
+    // 計算點擊位置相對於縮放後的Canvas的座標
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
     
     onClick({ x, y });
   };
@@ -38,7 +44,34 @@ const DicomCanvas = ({
   // 更新 Canvas 顯示
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !dicomFile) return;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+    
+    // 當有DICOM檔案時，調整Canvas大小以適應容器
+    if (dicomFile && dicomImage) {
+      // 獲取容器的尺寸
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+      
+      // 設定Canvas的畫布大小為影像的實際大小
+      canvas.width = dicomImage.width;
+      canvas.height = dicomImage.height;
+      
+      // 計算縮放比例，使影像能夠完整顯示在容器中
+      const scaleX = containerWidth / dicomImage.width;
+      const scaleY = containerHeight / dicomImage.height;
+      const scale = Math.min(scaleX, scaleY, 1); // 不要放大，只縮小
+      
+      // 設定Canvas的顯示大小
+      canvas.style.width = `${dicomImage.width * scale}px`;
+      canvas.style.height = `${dicomImage.height * scale}px`;
+      
+      // 讓Canvas在容器中居中
+      canvas.style.display = 'block';
+      canvas.style.margin = 'auto';
+    }
+    
+    if (!dicomFile) return;
     
     const ctx = canvas.getContext('2d');
     
@@ -60,12 +93,13 @@ const DicomCanvas = ({
   }, [dicomFile, dicomImage, labels, currentPolygon, editingLabelIndex]);
 
   return (
-    <div className="canvas-container">
+    <div ref={containerRef} className="canvas-container">
       <canvas 
         ref={canvasRef} 
         width={512} 
         height={512} 
         onClick={handleCanvasClick}
+        style={{ maxWidth: '100%', maxHeight: '100%' }}
       />
     </div>
   );
