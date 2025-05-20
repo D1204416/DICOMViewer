@@ -1,4 +1,4 @@
-// src/components/DicomCanvas.jsx (調整影像尺寸)
+// src/components/DicomCanvas.jsx (優化鼠標光標模式)
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { drawPolygon, drawDefaultImage, createDicomImage } from '../utils/dicomHelper';
 import WindowControls from './WindowControls';
@@ -11,7 +11,8 @@ const DicomCanvas = ({
   currentPolygon = [], 
   editingLabelIndex = -1, 
   onClick,
-  onImageUpdate 
+  onImageUpdate,
+  isDrawing = false 
 }) => {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -27,6 +28,22 @@ const DicomCanvas = ({
   
   // 窗寬/窗位相關狀態
   const [isInverted, setIsInverted] = useState(false);
+  
+  // 決定光標樣式的函數
+  const getCursorStyle = () => {
+    // 如果正在繪製或編輯標記，則顯示箭頭光標
+    if (isDrawing || editingLabelIndex !== -1) {
+      return 'default';  // 默認箭頭光標
+    }
+    
+    // 如果正在拖動，則顯示抓取光標
+    if (isDragging) {
+      return 'grabbing';
+    }
+    
+    // 否則顯示可抓取光標
+    return 'grab';
+  };
   
   // 調整Canvas大小適應容器
   useLayoutEffect(() => {
@@ -83,7 +100,7 @@ const DicomCanvas = ({
   
   // 處理畫布點擊
   const handleCanvasClick = (e) => {
-    if (!dicomFile || isDragging) return;
+    if (!dicomFile) return;
     
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -105,7 +122,7 @@ const DicomCanvas = ({
   
   // 處理滑鼠滾輪縮放
   const handleWheel = (e) => {
-    if (!dicomFile) return;
+    if (!dicomFile || isDrawing || editingLabelIndex !== -1) return;
     
     e.preventDefault();
     
@@ -140,8 +157,8 @@ const DicomCanvas = ({
   const handleMouseDown = (e) => {
     if (!dicomFile) return;
     
-    // 只有使用滑鼠左鍵時才啟動拖動
-    if (e.button !== 0) return;
+    // 只有使用滑鼠左鍵時才啟動拖動，並且不在繪製或編輯模式
+    if (e.button !== 0 || isDrawing || editingLabelIndex !== -1) return;
     
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
@@ -149,7 +166,7 @@ const DicomCanvas = ({
   
   // 處理拖動
   const handleMouseMove = (e) => {
-    if (!isDragging) return;
+    if (!isDragging || isDrawing || editingLabelIndex !== -1) return;
     
     const dx = e.clientX - dragStart.x;
     const dy = e.clientY - dragStart.y;
@@ -406,6 +423,9 @@ const DicomCanvas = ({
     const handleKeyDown = (e) => {
       if (!dicomFile) return;
       
+      // 如果正在繪製或編輯標記，不處理導航快捷鍵
+      if (isDrawing || editingLabelIndex !== -1) return;
+      
       switch (e.key) {
         case '0':
           resetView();
@@ -430,10 +450,14 @@ const DicomCanvas = ({
           break;
         case '+':
         case '=':
-          setScale(prev => Math.min(prev * 1.1, 10));
+          if (!isDrawing && editingLabelIndex === -1) {
+            setScale(prev => Math.min(prev * 1.1, 10));
+          }
           break;
         case '-':
-          setScale(prev => Math.max(prev * 0.9, 0.1));
+          if (!isDrawing && editingLabelIndex === -1) {
+            setScale(prev => Math.max(prev * 0.9, 0.1));
+          }
           break;
         case 'i':
           // 快速反轉影像
@@ -446,7 +470,7 @@ const DicomCanvas = ({
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [dicomFile, offset, dicomData, isInverted]);
+  }, [dicomFile, offset, dicomData, isInverted, isDrawing, editingLabelIndex]);
   
   return (
     <div
@@ -464,7 +488,7 @@ const DicomCanvas = ({
         height={canvasSize.height} 
         onClick={handleCanvasClick}
         style={{ 
-          cursor: isDragging ? 'grabbing' : 'grab',
+          cursor: getCursorStyle(),
           display: 'block',
           margin: 'auto'
         }}
@@ -485,7 +509,7 @@ const DicomCanvas = ({
         </div>
       )}
       
-      {showControls && dicomFile && (
+      {showControls && dicomFile && !isDrawing && editingLabelIndex === -1 && (
         <div className="controls-hint">
           <p>滑鼠滾輪: 縮放</p>
           <p>按住左鍵: 拖動</p>
@@ -493,7 +517,21 @@ const DicomCanvas = ({
         </div>
       )}
       
-      {dicomFile && (
+      {isDrawing && (
+        <div className="controls-hint">
+          <p>標記模式: 點擊添加多邊形頂點</p>
+          <p>完成後請點擊「完成繪製」按鈕</p>
+        </div>
+      )}
+      
+      {editingLabelIndex !== -1 && (
+        <div className="controls-hint">
+          <p>編輯模式: 點擊添加更多頂點</p>
+          <p>完成後請點擊「完成編輯」按鈕</p>
+        </div>
+      )}
+      
+      {dicomFile && !isDrawing && editingLabelIndex === -1 && (
         <div className="navigation-controls">
           <button onClick={() => navigateTo('fit')} title="適合視窗 (1)">🔍</button>
           <button onClick={resetView} title="重置 (0)">↺</button>

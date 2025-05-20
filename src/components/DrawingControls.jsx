@@ -1,4 +1,4 @@
-// src/components/DrawingControls.jsx (完整優化版)
+// src/components/DrawingControls.jsx (完整更新版)
 import React from 'react';
 
 const DrawingControls = ({ 
@@ -17,7 +17,7 @@ const DrawingControls = ({
     <div className="drawing-controls">
       {isDrawing && (
         <>
-          <p>點擊圖像添加多邊形頂點。至少需要3個點。</p>
+          <p>標記模式: 點擊圖像添加多邊形頂點。至少需要3個點。</p>
           <div className="button-group">
             <button 
               onClick={onFinishDrawing} 

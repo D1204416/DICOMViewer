@@ -1,4 +1,4 @@
-// src/DicomViewer.jsx (修正明暗對比度版本)
+// src/DicomViewer.jsx (完整更新版)
 import React, { useState } from 'react';
 import Header from './components/Header';
 import DicomUploader from './components/DicomUploader';
@@ -143,6 +143,7 @@ const DicomViewer = () => {
             labels={labels}
             currentPolygon={currentPolygon}
             editingLabelIndex={editingLabelIndex}
+            isDrawing={isDrawing} // 傳遞繪製狀態來控制鼠標光標
             onClick={handleCanvasClick}
             onImageUpdate={handleImageUpdate}
           />
