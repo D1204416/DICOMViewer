@@ -1,4 +1,4 @@
-// src/DicomViewer.jsx (完整更新版)
+// src/DicomViewer.jsx (更新布局，將標記工具並列在病患資訊旁)
 import React, { useState } from 'react';
 import Header from './components/Header';
 import DicomUploader from './components/DicomUploader';
@@ -123,16 +123,32 @@ const DicomViewer = () => {
   };
   
   return (
-    <>
+    <div className="app">
       {/* 標題欄 */}
       <Header title="DICOM Viewer" />
       
       <div className="main-content">
         <div className="left-panel">
-          {/* 上傳按鈕與病患信息 */}
-          <div className="top-controls">
-            <DicomUploader onDicomLoaded={handleDicomLoaded} />
-            <PatientInfo data={patientInfo} />
+          {/* 上傳按鈕、病患信息和繪製控制在同一行 */}
+          <div className="info-and-controls-row">
+            <div className="patient-section">
+              <DicomUploader onDicomLoaded={handleDicomLoaded} />
+              <PatientInfo data={patientInfo} />
+            </div>
+            
+            {/* 繪製控制放在這裡，在病患資訊旁邊 */}
+            {(isDrawing || editingLabelIndex !== -1) && (
+              <div className="drawing-controls-wrapper">
+                <DrawingControls
+                  isDrawing={isDrawing}
+                  editingLabelIndex={editingLabelIndex}
+                  onFinishDrawing={finishDrawing}
+                  onFinishEditing={finishEditing}
+                  onCancelDrawing={cancelDrawing}
+                  onCancelEditing={cancelEditing}
+                />
+              </div>
+            )}
           </div>
           
           {/* 圖像顯示 */}
@@ -143,19 +159,9 @@ const DicomViewer = () => {
             labels={labels}
             currentPolygon={currentPolygon}
             editingLabelIndex={editingLabelIndex}
-            isDrawing={isDrawing} // 傳遞繪製狀態來控制鼠標光標
+            isDrawing={isDrawing}
             onClick={handleCanvasClick}
             onImageUpdate={handleImageUpdate}
-          />
-          
-          {/* 繪製控制 */}
-          <DrawingControls
-            isDrawing={isDrawing}
-            editingLabelIndex={editingLabelIndex}
-            onFinishDrawing={finishDrawing}
-            onFinishEditing={finishEditing}
-            onCancelDrawing={cancelDrawing}
-            onCancelEditing={cancelEditing}
           />
         </div>
         
@@ -176,7 +182,7 @@ const DicomViewer = () => {
           />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

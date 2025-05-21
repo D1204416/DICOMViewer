@@ -1,4 +1,4 @@
-// src/components/DrawingControls.jsx (完整更新版)
+// src/components/DrawingControls.jsx
 import React from 'react';
 
 const DrawingControls = ({ 
@@ -17,13 +17,13 @@ const DrawingControls = ({
     <div className="drawing-controls">
       {isDrawing && (
         <>
-          <p>標記模式: 點擊圖像添加多邊形頂點。至少需要3個點。</p>
+          <p>標記模式: 點擊圖像添加頂點</p>
           <div className="button-group">
             <button 
               onClick={onFinishDrawing} 
               className="finish-button"
             >
-              完成繪製
+              完成
             </button>
             <button 
               onClick={onCancelDrawing} 
@@ -37,13 +37,13 @@ const DrawingControls = ({
       
       {editingLabelIndex !== -1 && (
         <>
-          <p>編輯標記 #{editingLabelIndex + 1}. 點擊圖像添加更多頂點。</p>
+          <p>編輯標記 #{editingLabelIndex + 1}</p>
           <div className="button-group">
             <button 
               onClick={onFinishEditing} 
               className="finish-button"
             >
-              完成編輯
+              完成
             </button>
             <button 
               onClick={onCancelEditing} 

@@ -1,4 +1,4 @@
-// src/components/DicomUploader.jsx (最終優化版)
+// src/components/DicomUploader.jsx
 import React, { useRef, useState } from 'react';
 import { parseDicomFile, createDicomImage } from '../utils/dicomHelper';
 import { calculateAge, formatDate } from '../utils/dateUtils';
@@ -22,28 +22,20 @@ const DicomUploader = ({ onDicomLoaded }) => {
             const arrayBuffer = e.target.result;
             const dicomData = parseDicomFile(arrayBuffer);
             
-            // 獲取原始的患者數據
-            const originalPatientData = dicomData.patientData;
-            console.log("原始患者數據:", originalPatientData);
-            
             // 從出生日期計算年齡
-            const birthdate = originalPatientData.birthdate;
+            const birthdate = dicomData.patientData.birthdate;
             const calculatedAge = calculateAge(birthdate);
-            console.log("計算出的年齡:", calculatedAge);
             
             // 格式化出生日期為易讀形式
             const formattedBirthdate = formatDate(birthdate);
-            console.log("格式化的出生日期:", formattedBirthdate);
             
             // 更新患者資訊
             const patientData = {
-              patientName: originalPatientData.patientName,
+              patientName: dicomData.patientData.patientName,
               birthdate: formattedBirthdate,
               age: calculatedAge,
-              sex: originalPatientData.sex
+              sex: dicomData.patientData.sex
             };
-            
-            console.log("更新後的患者數據:", patientData);
             
             console.log("Creating DICOM image...");
             const imageObj = await createDicomImage(dicomData);
@@ -79,7 +71,7 @@ const DicomUploader = ({ onDicomLoaded }) => {
   };
 
   return (
-    <div>
+    <div className="dicom-uploader">
       <button 
         onClick={triggerFileInput} 
         className="upload-button"

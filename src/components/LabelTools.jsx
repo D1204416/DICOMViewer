@@ -6,9 +6,9 @@ const LabelTools = ({ onAddLabel, disabled }) => {
     <div className="tools-panel">
       <h2>Label Tools</h2>
       <button 
-        onClick={onAddLabel} 
+        className="add-button" 
+        onClick={onAddLabel}
         disabled={disabled}
-        className="add-button"
       >
         Add
       </button>
