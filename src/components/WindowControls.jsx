@@ -1,5 +1,6 @@
 // src/components/WindowControls.jsx
 import React, { useState, useEffect } from 'react';
+import { getPresetWindows } from '../utils/dicomHelper';
 
 const WindowControls = ({ 
   dicomFile, 
@@ -10,6 +11,9 @@ const WindowControls = ({
   const [windowCenter, setWindowCenter] = useState(initialWindowCenter);
   const [windowWidth, setWindowWidth] = useState(initialWindowWidth);
   const [isOpen, setIsOpen] = useState(false);
+  
+  // 獲取預設窗口設置
+  const presetWindows = getPresetWindows();
   
   // 當初始值變化時更新狀態
   useEffect(() => {
@@ -39,20 +43,24 @@ const WindowControls = ({
     
     switch(preset) {
       case 'brain':
-        newCenter = 40;
-        newWidth = 80;
+        newCenter = presetWindows['腦'].center;
+        newWidth = presetWindows['腦'].width;
         break;
       case 'lung':
-        newCenter = -600;
-        newWidth = 1500;
+        newCenter = presetWindows['肺'].center;
+        newWidth = presetWindows['肺'].width;
         break;
       case 'softTissue':
-        newCenter = 50;
-        newWidth = 350;
+        newCenter = presetWindows['腹部'].center;
+        newWidth = presetWindows['腹部'].width;
+        break;
+      case 'mediastinum':
+        newCenter = presetWindows['縱隔'].center;
+        newWidth = presetWindows['縱隔'].width;
         break;
       case 'bone':
-        newCenter = 480;
-        newWidth = 2500;
+        newCenter = presetWindows['骨頭'].center;
+        newWidth = presetWindows['骨頭'].width;
         break;
       case 'invert':
         // 僅反轉黑白
@@ -68,6 +76,19 @@ const WindowControls = ({
     setWindowWidth(newWidth);
     onWindowChange(newCenter, newWidth);
   };
+  
+  // 計算滑動條最大最小值 (基於HU值範圍)
+  const getSliderRange = () => {
+    // CT影像的HU值典型範圍是-1024到3071
+    return {
+      centerMin: -1024,
+      centerMax: 3071,
+      widthMin: 1,
+      widthMax: 4095
+    };
+  };
+  
+  const sliderRange = getSliderRange();
   
   if (!dicomFile) return null;
   
@@ -88,8 +109,8 @@ const WindowControls = ({
               <label>窗位: {windowCenter}</label>
               <input
                 type="range"
-                min="-1024"
-                max="3071"
+                min={sliderRange.centerMin}
+                max={sliderRange.centerMax}
                 value={windowCenter}
                 onChange={handleCenterChange}
               />
@@ -98,8 +119,8 @@ const WindowControls = ({
               <label>窗寬: {windowWidth}</label>
               <input
                 type="range"
-                min="1"
-                max="4095"
+                min={sliderRange.widthMin}
+                max={sliderRange.widthMax}
                 value={windowWidth}
                 onChange={handleWidthChange}
               />
@@ -111,6 +132,7 @@ const WindowControls = ({
             <button onClick={() => applyPreset('brain')}>腦</button>
             <button onClick={() => applyPreset('lung')}>肺</button>
             <button onClick={() => applyPreset('softTissue')}>軟組織</button>
+            <button onClick={() => applyPreset('mediastinum')}>縱隔</button>
             <button onClick={() => applyPreset('bone')}>骨頭</button>
             <button onClick={() => applyPreset('invert')}>黑白反轉</button>
           </div>
