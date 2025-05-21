@@ -12,6 +12,7 @@ const DicomCanvas = ({
   editingLabelIndex = -1,
   onClick,
   onImageUpdate,
+  setLabels, // 用於更新標記的函數
   isDrawing = false
 }) => {
   const canvasRef = useRef(null);
@@ -196,6 +197,9 @@ const handleMouseDown = (e) => {
   // 處理拖動
 const handleMouseMove = (e) => {
   if (draggedPoint) {
+
+    console.log("正在拖動點位", draggedPoint);
+
     const rect = canvasRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / scale;
     const y = (e.clientY - rect.top) / scale;
@@ -292,6 +296,7 @@ const handleMouseMove = (e) => {
 
   // 在畫布上重繪影像和標記
   const redrawCanvas = (image) => {
+    console.log("重繪 Canvas 中...");
     const canvas = canvasRef.current;
     if (!canvas) return;
 

@@ -157,6 +157,7 @@ const DicomViewer = () => {
             dicomImage={dicomImage}
             dicomData={dicomData}
             labels={labels}
+            setLabels={setLabels} 
             currentPolygon={currentPolygon}
             editingLabelIndex={editingLabelIndex}
             isDrawing={isDrawing}

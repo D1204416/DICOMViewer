@@ -62,28 +62,28 @@ export const parseDicomFile = (arrayBuffer) => {
   try {
     const byteArray = new Uint8Array(arrayBuffer);
     let dataSet;
-    
+
     try {
       dataSet = dicomParser.parseDicom(byteArray);
     } catch (parseError) {
       console.error('解析 DICOM 結構時發生錯誤:', parseError);
       throw new Error('DICOM 解析失敗：檔案可能已損壞或格式不支援');
     }
-    
+
     // 解析患者信息 - 使用安全讀取函數
     const patientName = safeGetString(dataSet, 'x00100010', 'Unknown');
-    
+
     // 提取出生日期 (0010,0030)
     let birthdate = safeGetString(dataSet, 'x00100030', 'Unknown');
     console.log('原始出生日期:', birthdate);
-    
+
     // 提取年齡 (0010,1010)
     let age = safeGetString(dataSet, 'x00101010', 'Unknown');
     console.log('原始年齡:', age);
-    
+
     // 提取性別 (0010,0040)
     const sex = safeGetString(dataSet, 'x00100040', 'Unknown');
-    
+
     // 如果在 DICOM 中找不到出生日期，但有年齡，嘗試從年齡推算大概的出生年份
     if (birthdate === 'Unknown' && age !== 'Unknown') {
       console.log('嘗試從年齡推算出生年份');
@@ -92,10 +92,10 @@ export const parseDicomFile = (arrayBuffer) => {
       if (match) {
         const value = parseInt(match[1], 10);
         const unit = match[2];
-        
+
         const today = new Date();
         let birthYear = today.getFullYear();
-        
+
         switch (unit) {
           case 'Y': // 年
             birthYear -= value;
@@ -110,7 +110,7 @@ export const parseDicomFile = (arrayBuffer) => {
             birthYear = today.getFullYear() - Math.floor(value / 365);
             break;
         }
-        
+
         // 生成一個模擬的出生日期 (只有年份是準確的)
         birthdate = `${birthYear}0101`;
         console.log('從年齡推算的出生日期:', birthdate);
@@ -124,17 +124,17 @@ export const parseDicomFile = (arrayBuffer) => {
             const birthYear = parseInt(birthdate.substring(0, 4), 10);
             const birthMonth = parseInt(birthdate.substring(4, 6), 10) - 1; // JS月份從0開始
             const birthDay = parseInt(birthdate.substring(6, 8), 10);
-            
+
             const birthDate = new Date(birthYear, birthMonth, birthDay);
             const today = new Date();
-            
+
             // 計算年齡
             let ageYears = today.getFullYear() - birthDate.getFullYear();
             const m = today.getMonth() - birthDate.getMonth();
             if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
               ageYears--;
             }
-            
+
             age = ageYears.toString();
             console.log('從出生日期計算的年齡:', age);
           } catch (error) {
@@ -143,27 +143,27 @@ export const parseDicomFile = (arrayBuffer) => {
         }
       }
     }
-    
+
     const patientData = {
       patientName,
       birthdate,
       age,
       sex
     };
-    
+
     // 處理影像數據
     let pixelDataElement;
-    
+
     try {
       pixelDataElement = dataSet.elements.x7fe00010;
     } catch (error) {
       console.error('訪問像素數據元素時出錯:', error);
     }
-    
+
     if (!pixelDataElement) {
       throw new Error('無法找到像素數據');
     }
-    
+
     // 獲取重要的影像參數 - 使用安全讀取函數
     const rows = safeGetUint16(dataSet, 'x00280010', 512);
     const columns = safeGetUint16(dataSet, 'x00280011', 512);
@@ -173,23 +173,23 @@ export const parseDicomFile = (arrayBuffer) => {
     const pixelRepresentation = safeGetUint16(dataSet, 'x00280103', 0);
     const samplesPerPixel = safeGetUint16(dataSet, 'x00280002', 1);
     const planarConfiguration = safeGetUint16(dataSet, 'x00280006', 0);
-    
+
     // 獲取光度解釋參數
     const photometricInterpretation = safeGetString(dataSet, 'x00280004', 'MONOCHROME2');
-    
+
     // 獲取窗口寬度和中心值
     let windowCenter = safeGetNumber(dataSet, 'x00281050', 127);
     let windowWidth = safeGetNumber(dataSet, 'x00281051', 256);
-    
+
     // 如果窗口值是陣列，取第一個值
     if (Array.isArray(windowCenter)) windowCenter = windowCenter[0];
     if (Array.isArray(windowWidth)) windowWidth = windowWidth[0];
-    
+
     // 獲取 Rescale Slope 和 Intercept
     const rescaleSlope = safeGetNumber(dataSet, 'x00281053', 1);
     const rescaleIntercept = safeGetNumber(dataSet, 'x00281052', 0);
     const rescaleType = safeGetString(dataSet, 'x00281054', '');
-    
+
     // 如果是CT影像（rescaleType為HU）且沒有窗口值，設置適當的默認值
     const isHU = rescaleType === 'HU';
     if (isHU) {
@@ -206,10 +206,10 @@ export const parseDicomFile = (arrayBuffer) => {
         windowWidth = 256;
       }
     }
-    
+
     // 檢查 transfer syntax UID
     const transferSyntaxUID = safeGetString(dataSet, 'x00020010', '1.2.840.10008.1.2');
-    
+
     console.log("DICOM Info:", {
       rows,
       columns,
@@ -227,7 +227,7 @@ export const parseDicomFile = (arrayBuffer) => {
       transferSyntaxUID,
       patientData
     });
-    
+
     return {
       dataSet,
       pixelDataElement,
@@ -274,7 +274,7 @@ export const createDicomImage = async (dicomData) => {
       rescaleSlope = 1,
       rescaleIntercept = 0
     } = dicomData;
-    
+
     // 記錄處理參數
     console.log("處理DICOM影像:", {
       windowCenter,
@@ -283,22 +283,22 @@ export const createDicomImage = async (dicomData) => {
       rescaleSlope,
       rescaleIntercept
     });
-    
+
     // 創建離屏Canvas用於處理圖像
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
+
     // 設置Canvas尺寸與圖像尺寸相匹配
     canvas.width = columns;
     canvas.height = rows;
-    
+
     // 創建圖像數據
     const imageData = ctx.createImageData(columns, rows);
-    
+
     // 獲取像素數據
     let pixelData;
     const isUint16 = bitsAllocated === 16;
-    
+
     try {
       if (isUint16) {
         // 16位像素數據
@@ -317,27 +317,27 @@ export const createDicomImage = async (dicomData) => {
       console.error('創建像素數據時出錯:', error);
       throw new Error('處理像素數據失敗');
     }
-    
+
     // 查找最小和最大像素值，應用 rescale 轉換
     let minHU = Number.MAX_VALUE;
     let maxHU = Number.MIN_VALUE;
     let minRaw = Number.MAX_VALUE;
     let maxRaw = Number.MIN_VALUE;
-    
+
     // 安全遍歷像素數據
     try {
       // 遍歷像素並記錄範圍
       for (let i = 0; i < pixelData.length; i++) {
         const rawValue = pixelData[i];
         const huValue = rawValue * rescaleSlope + rescaleIntercept;
-        
+
         if (rawValue < minRaw) minRaw = rawValue;
         if (rawValue > maxRaw) maxRaw = rawValue;
         if (huValue < minHU) minHU = huValue;
         if (huValue > maxHU) maxHU = huValue;
       }
-      
-      console.log("Pixel ranges:", { 
+
+      console.log("Pixel ranges:", {
         raw: { min: minRaw, max: maxRaw },
         hu: { min: minHU, max: maxHU }
       });
@@ -349,39 +349,39 @@ export const createDicomImage = async (dicomData) => {
       minHU = rescaleIntercept;
       maxHU = maxRaw * rescaleSlope + rescaleIntercept;
     }
-    
+
     // 使用指定的窗寬/窗位
     let effectiveWindowCenter = windowCenter;
     let effectiveWindowWidth = windowWidth;
-    
+
     // 確保窗寬大於0
     if (effectiveWindowWidth <= 0) {
       effectiveWindowWidth = 256;
       console.log('窗寬設為默認值:', effectiveWindowWidth);
     }
-    
+
     // 確定需要應用的變換 (基於光度解釋)
     const invert = photometricInterpretation === 'MONOCHROME1';
-    
+
     // 計算窗口範圍
     const windowLow = effectiveWindowCenter - 0.5 * effectiveWindowWidth;
     const windowHigh = effectiveWindowCenter + 0.5 * effectiveWindowWidth;
-    
+
     console.log("Window range:", { low: windowLow, high: windowHigh });
-    
+
     try {
       // 轉換成ImageData格式
       let pixelIndex = 0;
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < columns; x++) {
           const rawPixelValue = pixelData[pixelIndex];
-          
+
           // 應用 rescale 轉換 (特別重要對於CT影像，將像素值轉換為HU值)
           const pixelValue = rawPixelValue * rescaleSlope + rescaleIntercept;
-          
+
           // 窗口級別調整
           let adjustedValue;
-          
+
           // 標準窗口級別調整
           if (pixelValue <= windowLow) {
             adjustedValue = 0;
@@ -390,32 +390,32 @@ export const createDicomImage = async (dicomData) => {
           } else {
             adjustedValue = Math.round(255 * (pixelValue - windowLow) / effectiveWindowWidth);
           }
-          
+
           // 限制在 0-255 範圍內
           adjustedValue = Math.max(0, Math.min(255, adjustedValue));
-          
+
           // 如果是 MONOCHROME1，則反轉亮度
           if (invert) {
             adjustedValue = 255 - adjustedValue;
           }
-          
+
           const dataIndex = (y * columns + x) * 4;
           imageData.data[dataIndex] = adjustedValue;     // R
           imageData.data[dataIndex + 1] = adjustedValue; // G
           imageData.data[dataIndex + 2] = adjustedValue; // B
           imageData.data[dataIndex + 3] = 255;           // Alpha
-          
+
           pixelIndex++;
         }
       }
-      
+
       // 放置圖像數據到Canvas
       ctx.putImageData(imageData, 0, 0);
     } catch (error) {
       console.error('生成圖像數據時出錯:', error);
       throw new Error('無法生成圖像');
     }
-    
+
     // 創建圖像對象並返回
     return new Promise((resolve, reject) => {
       try {
@@ -445,31 +445,32 @@ export const createDicomImage = async (dicomData) => {
  * @param {boolean} isEditing - 是否處於編輯模式
  */
 export const drawPolygon = (ctx, points, isEditing) => {
+  console.log("drawPolygon 被呼叫，點數:", points.length);
   if (!ctx || !points || points.length === 0) return;
-  
+
   try {
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
-    
+
     for (let i = 1; i < points.length; i++) {
       ctx.lineTo(points[i].x, points[i].y);
     }
-    
+
     // 閉合多邊形
     if (points.length > 2) {
       ctx.closePath();
     }
-    
+
     // 設置樣式
     ctx.strokeStyle = isEditing ? '#ff0000' : '#00ff00';
     ctx.lineWidth = 2;
     ctx.stroke();
-    
+
     if (points.length > 2) {
       ctx.fillStyle = isEditing ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)';
       ctx.fill();
     }
-    
+
     // 繪製頂點
     points.forEach(point => {
       ctx.beginPath();
@@ -490,12 +491,12 @@ export const drawPolygon = (ctx, points, isEditing) => {
  */
 export const drawDefaultImage = (ctx, width, height) => {
   if (!ctx) return;
-  
+
   try {
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = '#f0f0f0';
     ctx.fillRect(0, 0, width, height);
-    
+
     // 畫一個X
     ctx.beginPath();
     ctx.moveTo(0, 0);
@@ -505,7 +506,7 @@ export const drawDefaultImage = (ctx, width, height) => {
     ctx.strokeStyle = '#ff0000';
     ctx.lineWidth = 2;
     ctx.stroke();
-    
+
     // 添加文字
     ctx.font = '20px Arial';
     ctx.fillStyle = '#000';
