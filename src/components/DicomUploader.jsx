@@ -1,4 +1,4 @@
-// src/components/DicomUploader.jsx (使用增強的日期處理)
+// src/components/DicomUploader.jsx (最終優化版)
 import React, { useRef, useState } from 'react';
 import { parseDicomFile, createDicomImage } from '../utils/dicomHelper';
 import { calculateAge, formatDate } from '../utils/dateUtils';
@@ -22,19 +22,28 @@ const DicomUploader = ({ onDicomLoaded }) => {
             const arrayBuffer = e.target.result;
             const dicomData = parseDicomFile(arrayBuffer);
             
+            // 獲取原始的患者數據
+            const originalPatientData = dicomData.patientData;
+            console.log("原始患者數據:", originalPatientData);
+            
             // 從出生日期計算年齡
-            const birthdate = dicomData.patientData.birthdate;
+            const birthdate = originalPatientData.birthdate;
             const calculatedAge = calculateAge(birthdate);
+            console.log("計算出的年齡:", calculatedAge);
             
             // 格式化出生日期為易讀形式
             const formattedBirthdate = formatDate(birthdate);
+            console.log("格式化的出生日期:", formattedBirthdate);
             
             // 更新患者資訊
             const patientData = {
-              ...dicomData.patientData,
+              patientName: originalPatientData.patientName,
               birthdate: formattedBirthdate,
-              age: calculatedAge
+              age: calculatedAge,
+              sex: originalPatientData.sex
             };
+            
+            console.log("更新後的患者數據:", patientData);
             
             console.log("Creating DICOM image...");
             const imageObj = await createDicomImage(dicomData);

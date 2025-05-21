@@ -51,19 +51,22 @@ body {
   flex: 1;
   padding: 1rem;
   overflow: hidden;
-  height: calc(100vh - 60px); /* 減去頂部導航的高度 */
+  height: calc(100vh - 60px);
+  /* 減去頂部導航的高度 */
 }
 
 .left-panel {
   display: flex;
   flex-direction: column;
-  width: 75%; /* 增加左側面板的寬度 */
+  width: 75%;
+  /* 增加左側面板的寬度 */
   padding-right: 1rem;
   height: 100%;
 }
 
 .right-panel {
-  width: 25%; /* 調整右側面板的寬度 */
+  width: 25%;
+  /* 調整右側面板的寬度 */
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -99,13 +102,47 @@ body {
   display: none;
 }
 
+/* Patient Info styles */
 .patient-info {
-  font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  margin-left: 10px;
+  max-width: 400px;
 }
 
-.patient-info p {
-  margin-bottom: 0.25rem;
+
+.info-row {
+  display: flex;
+  margin-bottom: 5px;
 }
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  font-weight: 500;
+  min-width: 120px;
+  color: #495057;
+}
+
+.info-value {
+  color: #212529;
+}
+
+/* 讓 PatientName 和 Info 在同一行 */
+.top-controls {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+
+
 
 /* 添加到您的 CSS 文件中 */
 .canvas-container {
@@ -121,7 +158,8 @@ body {
 }
 
 canvas {
-  touch-action: none; /* 防止移動設備的觸控導致頁面縮放或滾動 */
+  touch-action: none;
+  /* 防止移動設備的觸控導致頁面縮放或滾動 */
   background-color: #f0f0f0;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
