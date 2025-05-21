@@ -89,10 +89,10 @@ const DicomCanvas = ({
       setShowControls(true);
       setIsInverted(false);
       
-      // 5秒後隱藏控制提示
+      // 3秒後隱藏控制提示
       const timer = setTimeout(() => {
         setShowControls(false);
-      }, 5000);
+      }, 3000);
       
       return () => clearTimeout(timer);
     }
