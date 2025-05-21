@@ -46,7 +46,7 @@ const WindowControls = ({
         newCenter = -600;
         newWidth = 1500;
         break;
-      case 'abdomen':
+      case 'softTissue':
         newCenter = 50;
         newWidth = 350;
         break;
@@ -110,7 +110,7 @@ const WindowControls = ({
             <button onClick={() => applyPreset('default')}>重設</button>
             <button onClick={() => applyPreset('brain')}>腦</button>
             <button onClick={() => applyPreset('lung')}>肺</button>
-            <button onClick={() => applyPreset('abdomen')}>腹部</button>
+            <button onClick={() => applyPreset('softTissue')}>軟組織</button>
             <button onClick={() => applyPreset('bone')}>骨頭</button>
             <button onClick={() => applyPreset('invert')}>黑白反轉</button>
           </div>
