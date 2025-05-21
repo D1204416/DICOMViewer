@@ -1,4 +1,4 @@
-// src/DicomViewer.jsx (完整更新版)
+// src/DicomViewer.jsx (最終版)
 import React, { useState } from 'react';
 import Header from './components/Header';
 import DicomUploader from './components/DicomUploader';
@@ -16,9 +16,9 @@ const DicomViewer = () => {
   const [dicomData, setDicomData] = useState(null);
   const [patientInfo, setPatientInfo] = useState({
     patientName: 'xxxx',
-    birthdate: 'xx',
-    age: 'xx',
-    sex: 'x'
+    birthdate: 'XX',
+    age: 'XX',
+    sex: 'X'
   });
   const [labels, setLabels] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -143,7 +143,7 @@ const DicomViewer = () => {
             labels={labels}
             currentPolygon={currentPolygon}
             editingLabelIndex={editingLabelIndex}
-            isDrawing={isDrawing} // 傳遞繪製狀態來控制鼠標光標
+            isDrawing={isDrawing}
             onClick={handleCanvasClick}
             onImageUpdate={handleImageUpdate}
           />

@@ -1,4 +1,4 @@
-/* src/styles/index.css */
+/* src/styles/index.css - 整合修改版 */
 :root {
   --primary-color: #1e40af;
   --primary-hover: #1e3a8a;
@@ -27,6 +27,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: var(--text-color);
+  background-color: var(--background-color);
 }
 
 .app {
@@ -44,6 +45,7 @@ body {
 
 .header h1 {
   font-size: 1.25rem;
+  margin: 0;
 }
 
 .main-content {
@@ -74,7 +76,6 @@ body {
 
 .top-controls {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 1rem;
 }
@@ -87,6 +88,8 @@ body {
   border-radius: 0.25rem;
   cursor: pointer;
   font-size: 1rem;
+  min-width: 100px;
+  text-align: center;
 }
 
 .upload-button:hover {
@@ -94,7 +97,7 @@ body {
 }
 
 .upload-button:disabled {
-  background-color: var(--border-color);
+  background-color: #ccc;
   cursor: not-allowed;
 }
 
@@ -104,45 +107,25 @@ body {
 
 /* Patient Info styles */
 .patient-info {
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  border: 1px solid #e9ecef;
-  margin-left: 10px;
-  max-width: 400px;
+  margin-left: 1rem;
+  padding: 0.5rem 0;
 }
-
 
 .info-row {
-  display: flex;
-  margin-bottom: 5px;
-}
-
-.info-row:last-child {
-  margin-bottom: 0;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
 }
 
 .info-label {
   font-weight: 500;
-  min-width: 120px;
+  display: inline-block;
+  margin-right: 0.5rem;
   color: #495057;
 }
 
 .info-value {
   color: #212529;
 }
-
-/* 讓 PatientName 和 Info 在同一行 */
-.top-controls {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-
-
 
 /* 添加到您的 CSS 文件中 */
 .canvas-container {
@@ -152,7 +135,10 @@ body {
   background-color: white;
   overflow: hidden;
   /* 防止內容溢出 */
-  max-height: 70vh;
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   user-select: none;
   /* 防止在拖動時選中文字 */
 }
@@ -160,7 +146,7 @@ body {
 canvas {
   touch-action: none;
   /* 防止移動設備的觸控導致頁面縮放或滾動 */
-  background-color: #f0f0f0;
+  background-color: white;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -248,12 +234,6 @@ canvas {
   }
 }
 
-/* 調整上傳按鈕在加載狀態下的樣式 */
-.upload-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
 /* 繪製控制區域的樣式補充 */
 .drawing-controls {
   margin-top: 0.5rem;
@@ -274,6 +254,7 @@ canvas {
   display: flex;
   justify-content: center;
   gap: 10px;
+  margin-top: 8px;
 }
 
 .finish-button {
@@ -283,6 +264,9 @@ canvas {
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 100px;
 }
 
 .finish-button:hover {
@@ -296,140 +280,95 @@ canvas {
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 100px;
 }
 
 .cancel-button:hover {
   background-color: var(--danger-hover);
 }
 
-.finish-button {
-  background-color: var(--secondary-color);
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  margin-top: 0.5rem;
-}
-
-.finish-button:hover {
-  background-color: var(--secondary-hover);
-}
-
-.tools-panel {
+/* 標籤工具區域 */
+.label-tools {
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 1rem;
   margin-bottom: 1rem;
-  border: 1px solid var(--border-color);
-  padding: 1rem;
-  background-color: white;
-}
-
-.tools-panel h2 {
-  font-size: 1.125rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-
-.add-button {
-  width: 100%;
-  background-color: var(--primary-color);
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-
-.add-button:hover {
-  background-color: var(--primary-hover);
-}
-
-.add-button:disabled {
-  background-color: var(--border-color);
-  color: #6b7280;
-  cursor: not-allowed;
-}
-
-.labels-panel {
-  flex: 1;
-  border: 1px solid var(--border-color);
-  padding: 1rem;
-  background-color: white;
-  overflow-y: auto;
-}
-
-.labels-panel h2 {
-  font-size: 1.125rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
 }
 
 .label-list {
-  list-style: none;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 1rem;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .label-item {
   display: flex;
   align-items: center;
-  margin-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #edf2f7;
 }
 
-.label-name {
-  margin-right: 0.5rem;
+.label-item:last-child {
+  border-bottom: none;
 }
 
-.button-group {
-  margin-left: auto;
+.label-text {
+  flex: 1;
+  margin-left: 0.5rem;
+}
+
+.label-actions {
   display: flex;
 }
 
-.edit-button {
-  background-color: var(--primary-color);
-  color: white;
-  padding: 0.25rem 0.5rem;
+.label-actions button {
+  background: none;
   border: none;
-  border-radius: 0.25rem;
-  margin-right: 0.5rem;
   cursor: pointer;
-  font-size: 0.75rem;
-  display: flex;
-  align-items: center;
+  padding: 0.25rem;
+  margin-left: 0.25rem;
+  color: #718096;
+  transition: color 0.2s;
+}
+
+.label-actions button:hover {
+  color: var(--primary-color);
 }
 
 .edit-button:hover {
-  background-color: var(--primary-hover);
-}
-
-.edit-button:disabled {
-  background-color: var(--border-color);
-  cursor: not-allowed;
-}
-
-.delete-button {
-  background-color: var(--danger-color);
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  font-size: 0.75rem;
-  display: flex;
-  align-items: center;
+  color: var(--secondary-color);
 }
 
 .delete-button:hover {
-  background-color: var(--danger-hover);
+  color: var(--danger-color);
 }
 
-.delete-button:disabled {
-  background-color: var(--border-color);
+/* 按鈕樣式 */
+.add-button {
+  background-color: var(--secondary-color);
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.add-button:hover {
+  background-color: var(--secondary-hover);
+}
+
+.add-button:disabled {
+  background-color: #a0aec0;
   cursor: not-allowed;
-}
-
-.icon {
-  width: 1rem;
-  height: 1rem;
 }
 
 /* 自訂滾動條樣式 */
