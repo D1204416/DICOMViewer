@@ -156,11 +156,46 @@ const DicomCanvas = ({
   };
 
   // 處理拖動開始
-  const handleMouseDown = (e) => {
-    if (!dicomFile) return;
+const handleMouseDown = (e) => {
+  if (!dicomFile) return;
+  if (e.button !== 0) return;
 
-    if (e.button !== 0) return;
+  const rect = canvasRef.current.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / scale;
+  const y = (e.clientY - rect.top) / scale;
 
+  const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
+  const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
+
+  const canvasX = x * imageToCanvasRatioX + offset.x;
+  const canvasY = y * imageToCanvasRatioY + offset.y;
+
+  // 拖移編輯點位
+  if (editingLabelIndex !== -1) {
+    const label = labels[editingLabelIndex];
+    const pointIndex = label.points.findIndex(p => {
+      const dx = p.x - canvasX;
+      const dy = p.y - canvasY;
+      return Math.sqrt(dx * dx + dy * dy) < 10; // 點擊半徑 10px
+    });
+
+    if (pointIndex !== -1) {
+      setDraggedPoint({ labelIndex: editingLabelIndex, pointIndex });
+      return;
+    }
+  }
+
+  if (!isDrawing && editingLabelIndex === -1) {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  }
+};
+
+
+
+  // 處理拖動
+const handleMouseMove = (e) => {
+  if (draggedPoint) {
     const rect = canvasRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / scale;
     const y = (e.clientY - rect.top) / scale;
@@ -168,64 +203,30 @@ const DicomCanvas = ({
     const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
     const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
 
-    const canvasX = x * imageToCanvasRatioX + offset.x;
-    const canvasY = y * imageToCanvasRatioY + offset.y;
+    const newX = x * imageToCanvasRatioX + offset.x;
+    const newY = y * imageToCanvasRatioY + offset.y;
 
-    if (editingLabelIndex !== -1) {
-      const label = labels[editingLabelIndex];
-      const pointIndex = label.points.findIndex(p => {
-        const dx = p.x - canvasX;
-        const dy = p.y - canvasY;
-        return Math.sqrt(dx * dx + dy * dy) < 10; // 點擊範圍半徑 10px
-      });
+    const updatedLabels = [...labels];
+    updatedLabels[draggedPoint.labelIndex].points[draggedPoint.pointIndex] = { x: newX, y: newY };
+    setLabels(updatedLabels);
+    return;
+  }
 
-      if (pointIndex !== -1) {
-        setDraggedPoint({ labelIndex: editingLabelIndex, pointIndex });
-        return;
-      }
-    }
+  if (!isDragging || isDrawing || editingLabelIndex !== -1) return;
 
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
-  };
+  const dx = e.clientX - dragStart.x;
+  const dy = e.clientY - dragStart.y;
 
+  const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
+  const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
 
-  // 處理拖動
-  const handleMouseMove = (e) => {
+  const newOffsetX = offset.x - (dx / scale) * imageToCanvasRatioX;
+  const newOffsetY = offset.y - (dy / scale) * imageToCanvasRatioY;
 
-    if (draggedPoint) {
-      const rect = canvasRef.current.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / scale;
-      const y = (e.clientY - rect.top) / scale;
+  setOffset({ x: newOffsetX, y: newOffsetY });
+  setDragStart({ x: e.clientX, y: e.clientY });
+};
 
-      const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
-      const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
-
-      const newX = x * imageToCanvasRatioX + offset.x;
-      const newY = y * imageToCanvasRatioY + offset.y;
-
-      const updatedLabels = [...labels];
-      updatedLabels[draggedPoint.labelIndex].points[draggedPoint.pointIndex] = { x: newX, y: newY };
-      onImageUpdate?.(dicomImage, dicomData); // 若有更新回調
-      setLabels(updatedLabels);
-      return;
-    }
-
-    if (!isDragging || isDrawing || editingLabelIndex !== -1) return;
-
-    const dx = e.clientX - dragStart.x;
-    const dy = e.clientY - dragStart.y;
-
-    const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
-    const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
-
-    // 計算新的偏移量
-    const newOffsetX = offset.x - (dx / scale) * imageToCanvasRatioX;
-    const newOffsetY = offset.y - (dy / scale) * imageToCanvasRatioY;
-
-    setOffset({ x: newOffsetX, y: newOffsetY });
-    setDragStart({ x: e.clientX, y: e.clientY });
-  };
 
   // 處理拖動結束
   const handleMouseUp = () => {
