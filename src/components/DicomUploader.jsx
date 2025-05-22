@@ -1,6 +1,7 @@
 // src/components/DicomUploader.jsx
 import React, { useRef, useState } from 'react';
-import { parseDicomFile, createDicomImage } from '../utils/dicomHelper';
+import { parseDicomFile } from '../utils/dicomMetadataParser';
+import { createDicomImage } from '../utils/dicomImageRenderer';
 import { calculateAge, formatDate } from '../utils/dateUtils';
 
 const DicomUploader = ({ onDicomLoaded }) => {

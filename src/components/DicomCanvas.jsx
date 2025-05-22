@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useLayoutEffect } from 'react';
-import { drawPolygon, drawDefaultImage, createDicomImage } from '../utils/dicomHelper';
+import { drawPolygon, drawDefaultImage } from '../utils/dicomHelper';
+import { createDicomImage } from '../utils/dicomImageRenderer';
 import WindowControls from './WindowControls';
 import CanvasToolbar from './CanvasToolbar';
 import { useCanvasInteraction } from '../hooks/useCanvasInteraction';
