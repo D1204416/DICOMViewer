@@ -34,7 +34,7 @@ DICOM Viewer 是一個基於 **React** 與 **HTML5 Canvas** 打造的醫療影�
 
 ```
 src/
-├── App.jsx                    # 主應用組件，掛載 DicomViewer
+├── App.jsx                   # 主應用組件，掛載 DicomViewer
 ├── DicomViewer.jsx           # 核心組件：控制影像載入、標記邏輯與畫布互動
 ├── main.jsx                  # React 應用入口，綁定 root 節點
 ├── index.css                 # 全域樣式入口，整合所有 CSS 模組
