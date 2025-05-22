@@ -237,6 +237,44 @@ canvas {
   background-color: rgba(0, 0, 0, 0.7);
 }
 
+.tooltip-container {
+  /* position: relative;
+  display: inline-block; */
+
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  gap: 5px;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+
+  position: absolute;
+  bottom: 125%;
+  /* 按鈕上方 */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+
 /* 添加上傳時的加載指示器樣式 */
 .loading-indicator {
   display: inline-block;

@@ -609,13 +609,6 @@ const DicomCanvas = ({
         <div className="controls-hint">
           {/* <p>滑鼠滾輪: 縮放</p> */}
           <p>按住左鍵: 拖動</p>
-          <p>快捷鍵:</p>
-          <p>0 (重置)</p>
-          <p>1 (適合)</p>
-          <p>2 (居中)</p>
-          <p>+ (放大)</p>
-          <p>- (縮小)</p>
-          <p>i (反轉)</p>
         </div>
       )}
 
@@ -635,11 +628,13 @@ const DicomCanvas = ({
 
       {dicomFile && !isDrawing && editingLabelIndex === -1 && (
         <div className="navigation-controls">
+          <div className="tooltip-container">
           <button onClick={() => navigateTo('fit')} title="適合視窗 (1)">🔍</button>
           <button onClick={resetView} title="重置 (0)">↺</button>
           <button onClick={() => setScale(prev => Math.min(prev * 1.1, 10))} title="放大 (+)">+</button>
           <button onClick={() => setScale(prev => Math.max(prev * 0.9, 0.1))} title="縮小 (-)">-</button>
           <button onClick={() => handleWindowChange(null, null, true)} title="反轉 (i)">◐</button>
+          </div>
         </div>
       )}
     </div>
