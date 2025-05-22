@@ -126,6 +126,10 @@ const DicomCanvas = ({
 
   // 處理滑鼠滾輪縮放
   const handleWheel = (e) => {
+
+    // 停用滾輪縮放
+    return;
+
     if (!dicomFile || isDrawing || editingLabelIndex !== -1) return;
 
     e.preventDefault();
@@ -568,7 +572,7 @@ const DicomCanvas = ({
     <div
       ref={containerRef}
       className="canvas-container"
-      onWheel={handleWheel}
+      // onWheel={handleWheel} // 停用滾輪縮放
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -603,9 +607,15 @@ const DicomCanvas = ({
 
       {showControls && dicomFile && !isDrawing && editingLabelIndex === -1 && (
         <div className="controls-hint">
-          <p>滑鼠滾輪: 縮放</p>
+          {/* <p>滑鼠滾輪: 縮放</p> */}
           <p>按住左鍵: 拖動</p>
-          <p>快捷鍵: 0 (重置), 1 (適合), 2 (居中), + (放大), - (縮小), i (反轉)</p>
+          <p>快捷鍵:</p>
+          <p>0 (重置)</p>
+          <p>1 (適合)</p>
+          <p>2 (居中)</p>
+          <p>+ (放大)</p>
+          <p>- (縮小)</p>
+          <p>i (反轉)</p>
         </div>
       )}
 
