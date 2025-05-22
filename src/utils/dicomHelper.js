@@ -456,8 +456,8 @@ export const drawPolygon = (ctx, points, isEditing) => {
       ctx.lineTo(points[i].x, points[i].y);
     }
 
-    // 閉合多邊形
-    if (points.length > 2) {
+    // 僅在非繪製中時閉合多邊形
+    if (points.length > 2 && !isEditing) {
       ctx.closePath();
     }
 
