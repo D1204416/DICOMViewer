@@ -28,19 +28,19 @@ const PatientInfo = ({ data }) => {
       <div className="info-part info-part2">
         <div className="info-row">
           <span className="info-label">P't ID:</span>
-          <span className="info-value">{data.patientId || 'Unknown'}</span>
+          <span className="info-value">{data.patientId}</span>
         </div>
         <div className="info-row">
           <span className="info-label">Birth Time:</span>
-          <span className="info-value">{data.birthTime || 'Unknown'}</span>
+          <span className="info-value">{data.birthTime}</span>
         </div>
         <div className="info-row">
           <span className="info-label">Body Part:</span>
-          <span className="info-value">{data.bodyPartExamined || 'Unknown'}</span>
+          <span className="info-value">{data.bodyPartExamined}</span>
         </div>
         <div className="info-row">
           <span className="info-label">P't Position:</span>
-          <span className="info-value">{data.patientPosition || 'Unknown'}</span>
+          <span className="info-value">{data.patientPosition}</span>
         </div>
       </div>
 

@@ -16,9 +16,13 @@ const DicomViewer = () => {
   const [dicomData, setDicomData] = useState(null);
   const [patientInfo, setPatientInfo] = useState({
     patientName: 'xxxx',
-    birthdate: 'xx',
+    birthdate: 'xxxx',
     age: 'xx',
-    sex: 'x'
+    sex: 'x',
+    patientId: 'xxxx',
+    birthTime: 'xxxxxx',
+    bodyPartExamined: 'xx',
+    patientPosition: 'xxx',
   });
   const [labels, setLabels] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
