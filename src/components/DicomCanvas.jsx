@@ -125,7 +125,7 @@ const DicomCanvas = ({
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < 10) {
-        console.log('點回第一個點，自動完成標記');
+        // console.log('點回第一個點，自動完成標記');
         onClick(null, true); // 👈 傳入 autoFinish = true
         return;
       }
@@ -219,8 +219,8 @@ const DicomCanvas = ({
   // 處理拖動
   const handleMouseMove = (e) => {
     if (draggedPoint) {
-      console.log("正在拖動點位", draggedPoint);
-      console.log('滑鼠:', mousePosition, '第一點:', currentPolygon[0]);
+      // console.log("正在拖動點位", draggedPoint);
+      // console.log('滑鼠:', mousePosition, '第一點:', currentPolygon[0]);
 
 
       const rect = canvasRef.current.getBoundingClientRect();
@@ -252,7 +252,7 @@ const DicomCanvas = ({
       const canvasY = y * imageToCanvasRatioY + offset.y;
 
       setMousePosition({ x: canvasX, y: canvasY });
-      console.log('滑鼠座標更新:', canvasX, canvasY);
+      // console.log('滑鼠座標更新:', canvasX, canvasY);
     }
 
     // 拖動畫面平移

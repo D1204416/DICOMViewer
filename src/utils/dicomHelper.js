@@ -75,35 +75,35 @@ export const parseDicomFile = (arrayBuffer) => {
 
     // 提取病患ID (0010,0020)
     const patientId = safeGetString(dataSet, 'x00100020', 'Unknown');
-    console.log('原始病患ID:', patientId);
+    // console.log('原始病患ID:', patientId);
 
     // 提取出生日期 (0010,0030)
     let birthdate = safeGetString(dataSet, 'x00100030', 'Unknown');
-    console.log('原始出生日期:', birthdate);
+    // console.log('原始出生日期:', birthdate);
 
     // 提取出生時間 (0010,0032)
     const birthTime = safeGetString(dataSet, 'x00100032', 'Unknown');
-    console.log('原始出生時間:', birthTime);
+    // console.log('原始出生時間:', birthTime);
 
     // 提取年齡 (0010,1010)
     let age = safeGetString(dataSet, 'x00101010', 'Unknown');
-    console.log('原始年齡:', age);
+    // console.log('原始年齡:', age);
 
     // 提取性別 (0010,0040)
     const sex = safeGetString(dataSet, 'x00100040', 'Unknown');
 
     // 提取檢查部位 (0018,0015)
     const bodyPartExamined = safeGetString(dataSet, 'x00180015', 'Unknown');
-    console.log('原始部位:', bodyPartExamined);
+    // console.log('原始部位:', bodyPartExamined);
 
     // 提取病人位置 (0018,5100)
     const patientPosition = safeGetString(dataSet, 'x00185100', 'Unknown');
-    console.log('原始病人位置:', patientPosition);
+    // console.log('原始病人位置:', patientPosition);
 
 
     // 如果在 DICOM 中找不到出生日期，但有年齡，嘗試從年齡推算大概的出生年份
     if (birthdate === 'Unknown' && age !== 'Unknown') {
-      console.log('嘗試從年齡推算出生年份');
+      // console.log('嘗試從年齡推算出生年份');
       // 一般 DICOM 的年齡格式為 "070Y" 表示 70 歲
       const match = age.match(/^(\d+)([DWMY])$/);
       if (match) {
@@ -130,7 +130,7 @@ export const parseDicomFile = (arrayBuffer) => {
 
         // 生成一個模擬的出生日期 (只有年份是準確的)
         birthdate = `${birthYear}0101`;
-        console.log('從年齡推算的出生日期:', birthdate);
+        // console.log('從年齡推算的出生日期:', birthdate);
       }
     } else if (birthdate !== 'Unknown') {
       // 計算年齡（如果有出生日期但沒有年齡）
@@ -153,7 +153,7 @@ export const parseDicomFile = (arrayBuffer) => {
             }
 
             age = ageYears.toString();
-            console.log('從出生日期計算的年齡:', age);
+            // console.log('從出生日期計算的年齡:', age);
           } catch (error) {
             console.log('計算年齡時發生錯誤:', error);
           }
@@ -231,23 +231,23 @@ export const parseDicomFile = (arrayBuffer) => {
     // 檢查 transfer syntax UID
     const transferSyntaxUID = safeGetString(dataSet, 'x00020010', '1.2.840.10008.1.2');
 
-    console.log("DICOM Info:", {
-      rows,
-      columns,
-      bitsAllocated,
-      bitsStored,
-      highBit,
-      pixelRepresentation,
-      samplesPerPixel,
-      photometricInterpretation,
-      windowCenter,
-      windowWidth,
-      rescaleSlope,
-      rescaleIntercept,
-      rescaleType,
-      transferSyntaxUID,
-      patientData
-    });
+    // console.log("DICOM Info:", {
+    //   rows,
+    //   columns,
+    //   bitsAllocated,
+    //   bitsStored,
+    //   highBit,
+    //   pixelRepresentation,
+    //   samplesPerPixel,
+    //   photometricInterpretation,
+    //   windowCenter,
+    //   windowWidth,
+    //   rescaleSlope,
+    //   rescaleIntercept,
+    //   rescaleType,
+    //   transferSyntaxUID,
+    //   patientData
+    // });
 
     return {
       dataSet,
@@ -297,13 +297,13 @@ export const createDicomImage = async (dicomData) => {
     } = dicomData;
 
     // 記錄處理參數
-    console.log("處理DICOM影像:", {
-      windowCenter,
-      windowWidth,
-      photometricInterpretation,
-      rescaleSlope,
-      rescaleIntercept
-    });
+    // console.log("處理DICOM影像:", {
+    //   windowCenter,
+    //   windowWidth,
+    //   photometricInterpretation,
+    //   rescaleSlope,
+    //   rescaleIntercept
+    // });
 
     // 創建離屏Canvas用於處理圖像
     const canvas = document.createElement('canvas');
@@ -388,7 +388,7 @@ export const createDicomImage = async (dicomData) => {
     const windowLow = effectiveWindowCenter - 0.5 * effectiveWindowWidth;
     const windowHigh = effectiveWindowCenter + 0.5 * effectiveWindowWidth;
 
-    console.log("Window range:", { low: windowLow, high: windowHigh });
+    // console.log("Window range:", { low: windowLow, high: windowHigh });
 
     try {
       // 轉換成ImageData格式
