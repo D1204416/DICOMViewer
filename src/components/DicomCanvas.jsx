@@ -18,6 +18,7 @@ const DicomCanvas = ({
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [draggedPoint, setDraggedPoint] = useState(null); // { labelIndex, pointIndex }
+  const [mousePosition, setMousePosition] = useState(null);
 
 
   // 縮放和平移狀態
@@ -157,48 +158,9 @@ const DicomCanvas = ({
   };
 
   // 處理拖動開始
-const handleMouseDown = (e) => {
-  if (!dicomFile) return;
-  if (e.button !== 0) return;
-
-  const rect = canvasRef.current.getBoundingClientRect();
-  const x = (e.clientX - rect.left) / scale;
-  const y = (e.clientY - rect.top) / scale;
-
-  const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
-  const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
-
-  const canvasX = x * imageToCanvasRatioX + offset.x;
-  const canvasY = y * imageToCanvasRatioY + offset.y;
-
-  // 拖移編輯點位
-  if (editingLabelIndex !== -1) {
-    const label = labels[editingLabelIndex];
-    const pointIndex = label.points.findIndex(p => {
-      const dx = p.x - canvasX;
-      const dy = p.y - canvasY;
-      return Math.sqrt(dx * dx + dy * dy) < 10; // 點擊半徑 10px
-    });
-
-    if (pointIndex !== -1) {
-      setDraggedPoint({ labelIndex: editingLabelIndex, pointIndex });
-      return;
-    }
-  }
-
-  if (!isDrawing && editingLabelIndex === -1) {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
-  }
-};
-
-
-
-  // 處理拖動
-const handleMouseMove = (e) => {
-  if (draggedPoint) {
-
-    console.log("正在拖動點位", draggedPoint);
+  const handleMouseDown = (e) => {
+    if (!dicomFile) return;
+    if (e.button !== 0) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / scale;
@@ -207,29 +169,84 @@ const handleMouseMove = (e) => {
     const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
     const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
 
-    const newX = x * imageToCanvasRatioX + offset.x;
-    const newY = y * imageToCanvasRatioY + offset.y;
+    const canvasX = x * imageToCanvasRatioX + offset.x;
+    const canvasY = y * imageToCanvasRatioY + offset.y;
 
-    const updatedLabels = [...labels];
-    updatedLabels[draggedPoint.labelIndex].points[draggedPoint.pointIndex] = { x: newX, y: newY };
-    setLabels(updatedLabels);
-    return;
-  }
+    // 拖移編輯點位
+    if (editingLabelIndex !== -1) {
+      const label = labels[editingLabelIndex];
+      const pointIndex = label.points.findIndex(p => {
+        const dx = p.x - canvasX;
+        const dy = p.y - canvasY;
+        return Math.sqrt(dx * dx + dy * dy) < 10; // 點擊半徑 10px
+      });
 
-  if (!isDragging || isDrawing || editingLabelIndex !== -1) return;
+      if (pointIndex !== -1) {
+        setDraggedPoint({ labelIndex: editingLabelIndex, pointIndex });
+        return;
+      }
+    }
 
-  const dx = e.clientX - dragStart.x;
-  const dy = e.clientY - dragStart.y;
+    if (!isDrawing && editingLabelIndex === -1) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+    }
+  };
 
-  const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
-  const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
 
-  const newOffsetX = offset.x - (dx / scale) * imageToCanvasRatioX;
-  const newOffsetY = offset.y - (dy / scale) * imageToCanvasRatioY;
 
-  setOffset({ x: newOffsetX, y: newOffsetY });
-  setDragStart({ x: e.clientX, y: e.clientY });
-};
+  // 處理拖動
+  const handleMouseMove = (e) => {
+    if (draggedPoint) {
+      console.log("正在拖動點位", draggedPoint);
+
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / scale;
+      const y = (e.clientY - rect.top) / scale;
+
+      const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
+      const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
+
+      const newX = x * imageToCanvasRatioX + offset.x;
+      const newY = y * imageToCanvasRatioY + offset.y;
+
+      const updatedLabels = [...labels];
+      updatedLabels[draggedPoint.labelIndex].points[draggedPoint.pointIndex] = { x: newX, y: newY };
+      setLabels(updatedLabels);
+      return;
+    }
+
+    // 畫圖時更新滑鼠座標（預覽線條用）
+    if (isDrawing && dicomImage) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / scale;
+      const y = (e.clientY - rect.top) / scale;
+
+      const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
+      const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
+
+      const canvasX = x * imageToCanvasRatioX + offset.x;
+      const canvasY = y * imageToCanvasRatioY + offset.y;
+
+      setMousePosition({ x: canvasX, y: canvasY });
+      console.log('滑鼠座標更新:', canvasX, canvasY);
+    }
+
+    // 拖動畫面平移
+    if (!isDragging || isDrawing || editingLabelIndex !== -1) return;
+
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+
+    const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
+    const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
+
+    const newOffsetX = offset.x - (dx / scale) * imageToCanvasRatioX;
+    const newOffsetY = offset.y - (dy / scale) * imageToCanvasRatioY;
+
+    setOffset({ x: newOffsetX, y: newOffsetY });
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
 
 
   // 處理拖動結束
@@ -340,6 +357,27 @@ const handleMouseMove = (e) => {
         drawPolygon(ctx, adjustedPoints, true);
       }
     }
+    if (isDrawing && currentPolygon.length > 0 && mousePosition) {
+      const lastPoint = currentPolygon[currentPolygon.length - 1];
+
+      const start = {
+        x: (lastPoint.x - offset.x) / imageToCanvasRatioX,
+        y: (lastPoint.y - offset.y) / imageToCanvasRatioY
+      };
+      const end = {
+        x: (mousePosition.x - offset.x) / imageToCanvasRatioX,
+        y: (mousePosition.y - offset.y) / imageToCanvasRatioY
+      };
+
+      ctx.beginPath();
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(end.x, end.y);
+      ctx.strokeStyle = '#00ff00';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]); // 虛線
+      ctx.stroke();
+      ctx.setLineDash([]); // 清除虛線設定
+    }
 
     ctx.restore();
   };
@@ -410,31 +448,26 @@ const handleMouseMove = (e) => {
     const container = containerRef.current;
     if (!canvas || !container) return;
 
-    // 設置Canvas的顯示尺寸
     canvas.width = canvasSize.width;
     canvas.height = canvasSize.height;
 
+    const ctx = canvas.getContext('2d');
+
     if (!dicomFile) {
-      const ctx = canvas.getContext('2d');
       drawDefaultImage(ctx, canvas.width, canvas.height);
       return;
     }
 
     if (!dicomImage) return;
 
-    const ctx = canvas.getContext('2d');
-
-    // 清除畫布
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 繪製影像，考慮偏移和縮放
     const imageToCanvasRatioX = dicomImage.width / canvasSize.width;
     const imageToCanvasRatioY = dicomImage.height / canvasSize.height;
 
     ctx.save();
     ctx.scale(scale, scale);
 
-    // 繪製調整後的影像
     ctx.drawImage(
       dicomImage,
       offset.x, offset.y,
@@ -445,30 +478,37 @@ const handleMouseMove = (e) => {
       canvasSize.height / scale
     );
 
-    // 繪製標記，考慮偏移和縮放
-    if (labels.length > 0 || currentPolygon.length > 0) {
-      // 繪製標記時需要調整座標
-      const adjustPoint = (point) => ({
-        x: (point.x - offset.x) / imageToCanvasRatioX,
-        y: (point.y - offset.y) / imageToCanvasRatioY
-      });
+    const adjustPoint = (point) => ({
+      x: (point.x - offset.x) / imageToCanvasRatioX,
+      y: (point.y - offset.y) / imageToCanvasRatioY
+    });
 
-      // 繪製已有標記
-      labels.forEach((label, index) => {
-        const adjustedPoints = label.points.map(adjustPoint);
-        drawPolygon(ctx, adjustedPoints, index === editingLabelIndex);
-      });
+    labels.forEach((label, index) => {
+      const adjustedPoints = label.points.map(adjustPoint);
+      drawPolygon(ctx, adjustedPoints, index === editingLabelIndex);
+    });
 
-      // 繪製當前正在繪製的多邊形
-      if (currentPolygon.length > 0) {
-        const adjustedPoints = currentPolygon.map(adjustPoint);
-        drawPolygon(ctx, adjustedPoints, true);
+    if (currentPolygon.length > 0) {
+      const adjustedPoints = currentPolygon.map(adjustPoint);
+      drawPolygon(ctx, adjustedPoints, true);
+
+      if (isDrawing && mousePosition) {
+        const lastPoint = adjustPoint(currentPolygon[currentPolygon.length - 1]);
+        const previewPoint = adjustPoint(mousePosition);
+
+        ctx.beginPath();
+        ctx.moveTo(lastPoint.x, lastPoint.y);
+        ctx.lineTo(previewPoint.x, previewPoint.y);
+        ctx.strokeStyle = '#00ff00';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
       }
     }
 
     ctx.restore();
-
-  }, [dicomFile, dicomImage, labels, currentPolygon, editingLabelIndex, scale, offset, canvasSize]);
+  }, [dicomFile, dicomImage, labels, currentPolygon, editingLabelIndex, scale, offset, canvasSize, mousePosition]);
 
   // 鍵盤快捷鍵
   useEffect(() => {
