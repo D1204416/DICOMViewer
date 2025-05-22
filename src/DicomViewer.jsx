@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Header from './components/Header';
+// import Header from './components/Header';
 import DicomUploader from './components/DicomUploader';
 import PatientInfo from './components/PatientInfo';
 import DicomCanvas from './components/DicomCanvas';
@@ -21,6 +21,9 @@ const DicomViewer = () => {
     birthTime: 'xxxxxx',
     bodyPartExamined: 'xx',
     patientPosition: 'xxx',
+    height: 'xxx',
+    weight: 'xxx',
+    studyDate: 'xxxxxxxx',
   });
 
   const {
@@ -56,7 +59,7 @@ const DicomViewer = () => {
 
   return (
     <div className="app">
-      <Header title="DICOM Viewer" />
+      {/* <Header title="DICOM Viewer" /> */}
       <div className="main-content">
         <div className="left-panel">
           <div className="info-and-controls-row">
