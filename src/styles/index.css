@@ -132,9 +132,9 @@ body {
   margin-bottom: 10px;
 }
 
-.info-part{
+.info-part1{
   flex: 1;
-  margin-right: 10px;
+  margin-right: 2px;
 }
 
 .info-row {
@@ -147,9 +147,9 @@ body {
 }
 
 .info-label {
-  font-weight: 500;
+  font-weight: 600;
   min-width: 105px;
-  color: #495057;
+  color: #1126aa;
 }
 
 .info-value {
