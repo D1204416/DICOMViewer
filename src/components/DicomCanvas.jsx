@@ -117,11 +117,28 @@ const DicomCanvas = ({
     const x = canvasX * imageToCanvasRatioX + offset.x;
     const y = canvasY * imageToCanvasRatioY + offset.y;
 
-    // 禁止在編輯模式下新增點
+    // 若在標記中，檢查是否點回第一點
+    if (isDrawing && currentPolygon.length > 2) {
+      const firstPoint = currentPolygon[0];
+      const dx = x - firstPoint.x;
+      const dy = y - firstPoint.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < 10) {
+        console.log('點回第一個點，自動完成標記');
+        onClick(null, true); // 👈 傳入 autoFinish = true
+        return;
+      }
+
+
+    }
+
+    // 如果是標記狀態，正常新增點
     if (isDrawing) {
       onClick({ x, y });
     }
   };
+
 
 
   // 處理滑鼠滾輪縮放
@@ -203,6 +220,8 @@ const DicomCanvas = ({
   const handleMouseMove = (e) => {
     if (draggedPoint) {
       console.log("正在拖動點位", draggedPoint);
+      console.log('滑鼠:', mousePosition, '第一點:', currentPolygon[0]);
+
 
       const rect = canvasRef.current.getBoundingClientRect();
       const x = (e.clientX - rect.left) / scale;
@@ -373,14 +392,41 @@ const DicomCanvas = ({
         y: (mousePosition.y - offset.y) / imageToCanvasRatioY
       };
 
+      // 繪製從最後一點到滑鼠的虛線預覽
       ctx.beginPath();
       ctx.moveTo(start.x, start.y);
       ctx.lineTo(end.x, end.y);
       ctx.strokeStyle = '#00ff00';
       ctx.lineWidth = 1;
-      ctx.setLineDash([5, 5]); // 虛線
+      ctx.setLineDash([5, 5]);
       ctx.stroke();
-      ctx.setLineDash([]); // 清除虛線設定
+      ctx.setLineDash([]);
+
+      // 🔶 加入：如果滑鼠靠近第一點，提示可完成
+      if (currentPolygon.length > 2) {
+        const firstPoint = currentPolygon[0];
+        const dx = mousePosition.x - firstPoint.x;
+        const dy = mousePosition.y - firstPoint.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < 10) {
+          const adjustedFirst = {
+            x: (firstPoint.x - offset.x) / imageToCanvasRatioX,
+            y: (firstPoint.y - offset.y) / imageToCanvasRatioY
+          };
+
+          // 畫大圓圈作為提示
+          ctx.beginPath();
+          ctx.arc(adjustedFirst.x, adjustedFirst.y, 8, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffa500'; // 橘色
+          ctx.fill();
+
+          // 顯示提示文字
+          ctx.font = '14px Arial';
+          ctx.fillStyle = '#ffa500';
+          ctx.fillText('點擊以完成標記', adjustedFirst.x + 10, adjustedFirst.y - 10);
+        }
+      }
     }
 
     ctx.restore();
@@ -629,11 +675,11 @@ const DicomCanvas = ({
       {dicomFile && !isDrawing && editingLabelIndex === -1 && (
         <div className="navigation-controls">
           <div className="tooltip-container">
-          <button onClick={() => navigateTo('fit')} title="適合視窗 (1)">🔍</button>
-          <button onClick={resetView} title="重置 (0)">↺</button>
-          <button onClick={() => setScale(prev => Math.min(prev * 1.1, 10))} title="放大 (+)">+</button>
-          <button onClick={() => setScale(prev => Math.max(prev * 0.9, 0.1))} title="縮小 (-)">-</button>
-          <button onClick={() => handleWindowChange(null, null, true)} title="反轉 (i)">◐</button>
+            <button onClick={() => navigateTo('fit')} title="適合視窗 (1)">🔍</button>
+            <button onClick={resetView} title="重置 (0)">↺</button>
+            <button onClick={() => setScale(prev => Math.min(prev * 1.1, 10))} title="放大 (+)">+</button>
+            <button onClick={() => setScale(prev => Math.max(prev * 0.9, 0.1))} title="縮小 (-)">-</button>
+            <button onClick={() => handleWindowChange(null, null, true)} title="反轉 (i)">◐</button>
           </div>
         </div>
       )}

@@ -108,19 +108,21 @@ const DicomViewer = () => {
   };
   
   // 處理畫布點擊
-  const handleCanvasClick = (point) => {
-    if (!dicomFile) return;
-    
-    if (isDrawing) {
-      // 繪製新多邊形
-      setCurrentPolygon([...currentPolygon, point]);
-    } else if (editingLabelIndex !== -1) {
-      // 編輯模式
-      const updatedLabels = [...labels];
-      updatedLabels[editingLabelIndex].points.push(point);
-      setLabels(updatedLabels);
-    }
-  };
+  const handleCanvasClick = (point, autoFinish = false) => {
+  if (autoFinish) {
+    finishDrawing();
+    return;
+  }
+
+  if (isDrawing) {
+    setCurrentPolygon([...currentPolygon, point]);
+  } else if (editingLabelIndex !== -1) {
+    const updatedLabels = [...labels];
+    updatedLabels[editingLabelIndex].points.push(point);
+    setLabels(updatedLabels);
+  }
+};
+
   
   return (
     <div className="app">

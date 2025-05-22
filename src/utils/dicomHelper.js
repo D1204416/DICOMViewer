@@ -95,11 +95,11 @@ export const parseDicomFile = (arrayBuffer) => {
     // 提取檢查部位 (0018,0015)
     const bodyPartExamined = safeGetString(dataSet, 'x00180015', 'Unknown');
     console.log('原始部位:', bodyPartExamined);
-    
+
     // 提取病人位置 (0018,5100)
     const patientPosition = safeGetString(dataSet, 'x00185100', 'Unknown');
     console.log('原始病人位置:', patientPosition);
-  
+
 
     // 如果在 DICOM 中找不到出生日期，但有年齡，嘗試從年齡推算大概的出生年份
     if (birthdate === 'Unknown' && age !== 'Unknown') {
@@ -477,10 +477,15 @@ export const drawPolygon = (ctx, points, isEditing) => {
       ctx.lineTo(points[i].x, points[i].y);
     }
 
-    // 僅在非繪製中時閉合多邊形
-    if (points.length > 2 && !isEditing) {
-      ctx.closePath();
+    // 👉 加上這行才會封閉形狀
+    if (!isEditing && points.length >= 3) {
+      ctx.closePath(); // 讓最後一點連回第一點
     }
+
+    // 僅在非繪製中時閉合多邊形
+    // if (points.length > 2 && !isEditing) {
+    //   ctx.closePath();
+    // }
 
     // 設置樣式
     ctx.strokeStyle = isEditing ? '#ff0000' : '#00ff00';
@@ -490,6 +495,18 @@ export const drawPolygon = (ctx, points, isEditing) => {
     if (points.length > 2) {
       ctx.fillStyle = isEditing ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)';
       ctx.fill();
+    }
+
+    // 第一點提示效果
+    if (isEditing && points.length >= 3) {
+      const firstPoint = points[0];
+      ctx.beginPath();
+      ctx.arc(firstPoint.x, firstPoint.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 165, 0, 0.8)'; // 橘色半透明
+      ctx.fill();
+      ctx.strokeStyle = 'orange';
+      ctx.lineWidth = 2;
+      ctx.stroke();
     }
 
     // 繪製頂點
