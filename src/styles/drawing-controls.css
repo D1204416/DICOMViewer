@@ -1,0 +1,46 @@
+.drawing-controls {
+  text-align: center;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  width: 100%;
+}
+
+.drawing-controls p {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #495057;
+}
+
+.drawing-controls .button-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.finish-button,
+.cancel-button {
+  min-width: 80px;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--secondary-color);
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.finish-button:hover {
+  background-color: var(--secondary-hover);
+}
+
+.cancel-button {
+  background-color: var(--danger-color);
+}
+
+.cancel-button:hover {
+  background-color: var(--danger-hover);
+}

@@ -1,0 +1,138 @@
+.tooltip-container {
+  /* position: relative;
+  display: inline-block; */
+
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  gap: 5px;
+}
+
+.tools-panel {
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
+  padding: 1rem;
+  background-color: white;
+  border-radius: 4px;
+}
+
+.tools-panel h2 {
+  font-size: 1.125rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.add-button {
+  width: 100%;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.add-button:hover {
+  background-color: var(--primary-hover);
+}
+
+.add-button:disabled {
+  background-color: var(--border-color);
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.labels-panel {
+  flex: 1;
+  border: 1px solid var(--border-color);
+  padding: 1rem;
+  background-color: white;
+  overflow-y: auto;
+  border-radius: 4px;
+}
+
+.labels-panel h2 {
+  font-size: 1.125rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.label-list {
+  list-style: none;
+}
+
+.label-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.label-name {
+  margin-right: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.label-indicator {
+  height: 8px;
+  width: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.button-group {
+  margin-left: auto;
+  display: flex;
+}
+
+.edit-button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 0.25rem;
+  margin-right: 0.5rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.edit-button:hover {
+  background-color: var(--primary-hover);
+}
+
+.edit-button:disabled {
+  background-color: var(--border-color);
+  cursor: not-allowed;
+}
+
+.delete-button {
+  background-color: var(--danger-color);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.delete-button:hover {
+  background-color: var(--danger-hover);
+}
+
+.delete-button:disabled {
+  background-color: var(--border-color);
+  cursor: not-allowed;
+}
+
+.icon {
+  width: 1rem;
+  height: 1rem;
+}

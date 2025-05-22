@@ -1,0 +1,78 @@
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background-color: var(--header-bg);
+  color: var(--light-text);
+  padding: 1rem;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 1.25rem;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  padding: 1rem;
+  overflow: hidden;
+  height: calc(100vh - 60px);
+}
+
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  width: 75%;
+  padding-right: 1rem;
+  height: 100%;
+}
+
+.right-panel {
+  width: 25%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.info-and-controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.patient-section {
+  flex: 1;
+  margin-right: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawing-controls-wrapper {
+  max-width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+}
+
+@media (max-width: 768px) {
+  .info-and-controls-row {
+    flex-direction: column;
+  }
+
+  .patient-section {
+    margin-right: 0;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
+  .drawing-controls-wrapper {
+    max-width: none;
+    width: 100%;
+  }
+}

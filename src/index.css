@@ -1,0 +1,7 @@
+@import './styles/base.css';
+@import './styles/canvas.css';
+@import './styles/drawing-controls.css';
+@import './styles/layout.css';
+@import './styles/patient.css';
+@import './styles/tools.css';
+@import './styles/upload.css';
