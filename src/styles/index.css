@@ -123,13 +123,18 @@ body {
 /* Patient Info styles */
 .patient-info {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   padding: 10px;
   background-color: #f8f9fa;
   border-radius: 4px;
   border: 1px solid #e9ecef;
-  width: 300px;
+  width: 430px;
   margin-bottom: 10px;
+}
+
+.info-part{
+  flex: 1;
+  margin-right: 10px;
 }
 
 .info-row {
@@ -143,7 +148,7 @@ body {
 
 .info-label {
   font-weight: 500;
-  min-width: 120px;
+  min-width: 105px;
   color: #495057;
 }
 

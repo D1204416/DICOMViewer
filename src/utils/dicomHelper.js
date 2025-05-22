@@ -73,9 +73,17 @@ export const parseDicomFile = (arrayBuffer) => {
     // 解析患者信息 - 使用安全讀取函數
     const patientName = safeGetString(dataSet, 'x00100010', 'Unknown');
 
+    // 提取病患ID (0010,0020)
+    const patientId = safeGetString(dataSet, 'x00100020', 'Unknown');
+    console.log('原始病患ID:', patientId);
+
     // 提取出生日期 (0010,0030)
     let birthdate = safeGetString(dataSet, 'x00100030', 'Unknown');
     console.log('原始出生日期:', birthdate);
+
+    // 提取出生時間 (0010,0032)
+    const birthTime = safeGetString(dataSet, 'x00100032', 'Unknown');
+    console.log('原始出生時間:', birthTime);
 
     // 提取年齡 (0010,1010)
     let age = safeGetString(dataSet, 'x00101010', 'Unknown');
@@ -83,6 +91,15 @@ export const parseDicomFile = (arrayBuffer) => {
 
     // 提取性別 (0010,0040)
     const sex = safeGetString(dataSet, 'x00100040', 'Unknown');
+
+    // 提取檢查部位 (0018,0015)
+    const bodyPartExamined = safeGetString(dataSet, 'x00180015', 'Unknown');
+    console.log('原始部位:', bodyPartExamined);
+    
+    // 提取病人位置 (0018,5100)
+    const patientPosition = safeGetString(dataSet, 'x00185100', 'Unknown');
+    console.log('原始病人位置:', patientPosition);
+  
 
     // 如果在 DICOM 中找不到出生日期，但有年齡，嘗試從年齡推算大概的出生年份
     if (birthdate === 'Unknown' && age !== 'Unknown') {
@@ -146,9 +163,13 @@ export const parseDicomFile = (arrayBuffer) => {
 
     const patientData = {
       patientName,
+      patientId,
       birthdate,
+      birthTime,
       age,
-      sex
+      sex,
+      bodyPartExamined,
+      patientPosition
     };
 
     // 處理影像數據

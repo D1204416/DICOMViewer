@@ -32,9 +32,13 @@ const DicomUploader = ({ onDicomLoaded }) => {
             // 更新患者資訊
             const patientData = {
               patientName: dicomData.patientData.patientName,
+              patientId: dicomData.patientData.patientId,
               birthdate: formattedBirthdate,
+              birthTime: dicomData.patientData.birthTime,
               age: calculatedAge,
-              sex: dicomData.patientData.sex
+              sex: dicomData.patientData.sex,
+              bodyPartExamined: dicomData.patientData.bodyPartExamined,
+              patientPosition: dicomData.patientData.patientPosition,
             };
             
             console.log("Creating DICOM image...");
