@@ -70,7 +70,7 @@ export const parseDicomFile = (arrayBuffer) => {
       throw new Error('DICOM 解析失敗：檔案可能已損壞或格式不支援');
     }
 
-    // 解析患者信息 - 使用安全讀取函數
+    // 解析患者信息 - (0010,0010)
     const patientName = safeGetString(dataSet, 'x00100010', 'Unknown');
 
     // 提取病患ID (0010,0020)

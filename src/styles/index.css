@@ -133,8 +133,7 @@ body {
 }
 
 .info-part1{
-  flex: 1;
-  margin-right: 2px;
+  margin-right: 25px;
 }
 
 .info-row {
@@ -148,7 +147,7 @@ body {
 
 .info-label {
   font-weight: 600;
-  min-width: 105px;
+  min-width: 100px;
   color: #1126aa;
 }
 

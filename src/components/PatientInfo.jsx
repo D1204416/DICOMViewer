@@ -10,20 +10,11 @@ const PatientInfo = ({ data }) => {
           <span className="info-label">P't Name:</span>
           <span className="info-value">{data.patientName}</span>
         </div>
-        <div className="info-row">
-          <span className="info-label">P't ID:</span>
-          <span className="info-value">{data.patientId || 'Unknown'}</span>
-        </div>
+
         <div className="info-row">
           <span className="info-label">Birthdate:</span>
           <span className="info-value">{data.birthdate}</span>
         </div>
-        <div className="info-row">
-          <span className="info-label">Birth Time:</span>
-          <span className="info-value">{data.birthTime || 'Unknown'}</span>
-        </div>
-      </div>
-      <div className="info-part info-part2">
         <div className="info-row">
           <span className="info-label">Age:</span>
           <span className="info-value">{data.age}</span>
@@ -31,6 +22,17 @@ const PatientInfo = ({ data }) => {
         <div className="info-row">
           <span className="info-label">Sex:</span>
           <span className="info-value">{data.sex}</span>
+        </div>
+
+      </div>
+      <div className="info-part info-part2">
+        <div className="info-row">
+          <span className="info-label">P't ID:</span>
+          <span className="info-value">{data.patientId || 'Unknown'}</span>
+        </div>
+        <div className="info-row">
+          <span className="info-label">Birth Time:</span>
+          <span className="info-value">{data.birthTime || 'Unknown'}</span>
         </div>
         <div className="info-row">
           <span className="info-label">Body Part:</span>
