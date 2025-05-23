@@ -59,14 +59,15 @@ export const parseDicomFile = (arrayBuffer) => {
     birthTime: safeGetString(dataSet, 'x00100032', 'Unknown'),
     age,
     sex: safeGetString(dataSet, 'x00100040', 'Unknown'),
-    bodyPartExamined: safeGetString(dataSet, 'x00180015', 'Unknown'),
-    patientPosition: safeGetString(dataSet, 'x00185100', 'Unknown'),
     height: safeGetString(dataSet, 'x00101020', 'Unknown'),
     weight: safeGetString(dataSet, 'x00101030', 'Unknown'),
+    
     studyDate: safeGetString(dataSet, 'x00080020', 'Unknown'),
+    bodyPartExamined: safeGetString(dataSet, 'x00180015', 'Unknown'),
+    patientPosition: safeGetString(dataSet, 'x00185100', 'Unknown'),
 
   };
-  
+
 
   const pixelDataElement = dataSet.elements.x7fe00010;
   if (!pixelDataElement) throw new Error('無法找到像素數據');

@@ -11,6 +11,10 @@ const PatientInfo = ({ data }) => {
           <span className="info-value">{data.patientName}</span>
         </div>
         <div className="info-row">
+          <span className="info-label">P't ID:</span>
+          <span className="info-value">{data.patientId}</span>
+        </div>
+        <div className="info-row">
           <span className="info-label">Birthdate:</span>
           <span className="info-value">{formatDate(data.birthdate)}</span>
         </div>
@@ -22,20 +26,10 @@ const PatientInfo = ({ data }) => {
           <span className="info-label">Sex:</span>
           <span className="info-value">{data.sex}</span>
         </div>
-        <div className="info-row">
-          <span className="info-label">Study Date:</span>
-          <span className="info-value">
-            {data.studyDate !== 'Unknown' ? formatDate(data.studyDate) : 'Unknown'}
-          </span>
-        </div>
-
       </div>
 
       <div className="info-part info-part2">
-        <div className="info-row">
-          <span className="info-label">P't ID:</span>
-          <span className="info-value">{data.patientId}</span>
-        </div>
+
         <div className="info-row">
           <span className="info-label">Height:</span>
           <span className="info-value">
@@ -53,15 +47,22 @@ const PatientInfo = ({ data }) => {
               : 'Unknown'}
           </span>
         </div>
-        <div className="info-row">
-          <span className="info-label">Body Part:</span>
-          <span className="info-value">{data.bodyPartExamined}</span>
+        <div>
+          <div className="info-row">
+            <span className="info-label">Study Date:</span>
+            <span className="info-value">
+              {data.studyDate !== 'Unknown' ? formatDate(data.studyDate) : 'Unknown'}
+            </span>
+          </div>
+          <div className="info-row">
+            <span className="info-label">Body Part:</span>
+            <span className="info-value">{data.bodyPartExamined}</span>
+          </div>
+          <div className="info-row">
+            <span className="info-label">P't Position:</span>
+            <span className="info-value">{data.patientPosition}</span>
+          </div>
         </div>
-        <div className="info-row">
-          <span className="info-label">P't Position:</span>
-          <span className="info-value">{data.patientPosition}</span>
-        </div>
-
       </div>
 
     </div>
