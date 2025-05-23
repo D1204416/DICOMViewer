@@ -29,7 +29,6 @@ const PatientInfo = ({ data }) => {
       </div>
 
       <div className="info-part info-part2">
-
         <div className="info-row">
           <span className="info-label">Height:</span>
           <span className="info-value">
@@ -37,7 +36,6 @@ const PatientInfo = ({ data }) => {
               ? `${data.height} cm`
               : 'Unknown'}
           </span>
-
         </div>
         <div className="info-row">
           <span className="info-label">Weight:</span>
