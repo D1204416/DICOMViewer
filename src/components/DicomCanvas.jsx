@@ -57,25 +57,47 @@ const DicomCanvas = ({
     return 'grab';
   };
 
-  useLayoutEffect(() => {
-    const updateCanvasSize = () => {
-      if (containerRef.current) {
-        const containerWidth = containerRef.current.clientWidth;
-        const containerHeight = containerRef.current.clientHeight;
-        const aspectRatio = dicomImage ? dicomImage.height / dicomImage.width : 1;
-        let newWidth = containerWidth - 40;
-        let newHeight = newWidth * aspectRatio;
-        if (newHeight > containerHeight - 40) {
-          newHeight = containerHeight - 40;
-          newWidth = newHeight / aspectRatio;
-        }
-        setCanvasSize({ width: Math.floor(newWidth), height: Math.floor(newHeight) });
+useLayoutEffect(() => {
+  const updateCanvasSize = () => {
+    if (containerRef.current) {
+      const containerWidth = containerRef.current.clientWidth;
+      const containerHeight = containerRef.current.clientHeight;
+
+      // 根據螢幕寬度決定 aspectRatio（未載入 dicomImage 時）
+    let aspectRatio;
+    if (dicomImage) {
+      aspectRatio = dicomImage.height / dicomImage.width;
+    } else {
+      const screenWidth = window.innerWidth;
+      if (screenWidth > 1200) {
+        aspectRatio = 0.5; // 桌機 - 橫向長方形
+      } else if (screenWidth > 768) {
+        aspectRatio = 1; // 平板 - 方比例 (1:1)
+      } else {
+        aspectRatio = 4/3; // 手機 - 直向長方形
       }
-    };
-    updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-    return () => window.removeEventListener('resize', updateCanvasSize);
-  }, [containerRef, dicomImage]);
+    }
+
+      let newWidth = containerWidth - 40;
+      let newHeight = newWidth * aspectRatio;
+
+      if (newHeight > containerHeight - 40) {
+        newHeight = containerHeight - 40;
+        newWidth = newHeight / aspectRatio;
+      }
+
+      setCanvasSize({
+        width: Math.floor(newWidth),
+        height: Math.floor(newHeight),
+      });
+    }
+  };
+
+  updateCanvasSize();
+  window.addEventListener('resize', updateCanvasSize);
+  return () => window.removeEventListener('resize', updateCanvasSize);
+}, [containerRef, dicomImage]);
+
 
   useEffect(() => {
     if (dicomFile && dicomImage) {
