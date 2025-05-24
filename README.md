@@ -118,6 +118,35 @@ npm run dev
 | + / - | 放大 / 縮小 |
 | i     | 黑白反轉    |
 
+
+---
+## ✅ 影像的還原與顯示的資訊對照表：
+
+1. 像素資料（Pixel Data）
+
+  - Pixel Data	(7FE0,0010)	
+  - Bits Allocated	(0028,0100)	
+  - Bits Stored	(0028,0101)	
+  - High Bit	(0028,0102)	
+  - Pixel Representation	(0028,0103)	
+  - Samples per Pixel	(0028,0002)	
+  - Planar Configuration	(0028,0006)	
+  - Photometric Interpretation	(0028,0004)	
+
+2. 幾何資訊（Image Geometry）
+
+  - Rows	(0028,0010)	
+  - Columns	(0028,0011)	
+
+3. 顯示資訊（Windowing / LUT）
+
+  - Window Center	(0028,1050)	
+  - Window Width	(0028,1051)	
+  - Rescale Intercept	(0028,1052)	
+  - Rescale Slope	(0028,1053)	
+  - Rescale Type	(0028,1054)	
+
+
 ---
 
 ## ✅ TODO / 擴充建議
@@ -126,7 +155,3 @@ npm run dev
 * [ ] 整合 cornerstonejs v4 提供進階影像處理
 * [ ] 加入 AI 模型推論標記區域（如腫瘤辨識）
 * [ ] 導入 Web PACS 查詢與匿名化功能
-
----
-
-
