@@ -30,6 +30,17 @@ const safeGetUint16 = (dataSet, tag, defaultValue = 0) => {
   }
 };
 
+const safeGetStringArray = (dataSet, tag) => {
+  try {
+    const value = dataSet.string(tag);
+    if (!value) return [];
+    return value.split('\\').map(parseFloat);
+  } catch {
+    return [];
+  }
+};
+
+
 export const parseDicomFile = (arrayBuffer) => {
   const byteArray = new Uint8Array(arrayBuffer);
   const dataSet = dicomParser.parseDicom(byteArray);
@@ -79,8 +90,7 @@ export const parseDicomFile = (arrayBuffer) => {
   if (Array.isArray(windowCenter)) windowCenter = windowCenter[0];
   if (Array.isArray(windowWidth)) windowWidth = windowWidth[0];
 
-  const isHU = rescaleType === 'HU';
-  if (isHU && windowWidth <= 0) {
+   if (rescaleType === 'HU' && windowWidth <= 0) {
     windowCenter = 40;
     windowWidth = 400;
   } else if (windowWidth <= 0) {
@@ -106,6 +116,11 @@ export const parseDicomFile = (arrayBuffer) => {
     rescaleIntercept: safeGetNumber(dataSet, 'x00281052', 0),
     rescaleType,
     transferSyntaxUID: safeGetString(dataSet, 'x00020010', '1.2.840.10008.1.2'),
+    
+    pixelSpacing: safeGetStringArray(dataSet, 'x00280030'),           // Pixel Spacing (mm/pixel)
+    imagePositionPatient: safeGetStringArray(dataSet, 'x00200032'),   // 影像左上角座標
+    imageOrientationPatient: safeGetStringArray(dataSet, 'x00200037'),// 橫向與縱向方向向量
+    
     patientData
   };
 };
