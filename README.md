@@ -137,6 +137,10 @@ npm run dev
 
   - Rows	(0028,0010)	
   - Columns	(0028,0011)	
+  - Pixel Spacing (0028,0030)
+  - Image Position Patient (0020,0032)
+  - Image Orientation Patient (0020,0037)
+  
 
 3. 顯示資訊（Windowing / LUT）
 
@@ -149,9 +153,3 @@ npm run dev
 
 ---
 
-## ✅ TODO / 擴充建議
-
-* [ ] 儲存標記結果為 JSON
-* [ ] 整合 cornerstonejs v4 提供進階影像處理
-* [ ] 加入 AI 模型推論標記區域（如腫瘤辨識）
-* [ ] 導入 Web PACS 查詢與匿名化功能
