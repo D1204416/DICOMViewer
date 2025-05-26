@@ -120,6 +120,27 @@ npm run dev
 
 
 ---
+
+## ✅ 影像病人資訊對照表：
+
+1. 常用病患基本資訊 (Patient Module)
+
+  - patientName (0010,0010)
+  - patientId (0010,0020)  
+  - birthdate (0010,0030)  
+  - birthTime (0010,0032)  
+  - age (0010,1010)  
+  - sex (0010,0040)  
+  - height (0010,1020)  
+  - weight (0010,1030)  
+
+2. 檢查相關的患者資訊
+
+  - studyDate (0008,0020)  
+  - bodyPartExamined (0018,0015)  
+  - patientPosition (0018,5100)
+  
+---
 ## ✅ 影像的還原與顯示的資訊對照表：
 
 1. 像素資料（Pixel Data）
