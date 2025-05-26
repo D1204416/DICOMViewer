@@ -45,7 +45,7 @@ const PatientInfo = ({ data }) => {
               : 'Unknown'}
           </span>
         </div>
-        <div>
+        <div className="info-bg">
           <div className="info-row">
             <span className="info-label">Study Date:</span>
             <span className="info-value">
